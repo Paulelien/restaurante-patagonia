@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Restaurante Patagonia - Arica</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2d3e50 0%, #34495e 100%);
+            padding-top: 0.3rem;
+            padding-bottom: 0.3rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar-brand, .nav-link, .navbar-nav .nav-link.active {
+            color: #fff !important;
+        }
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+            color: #fff;
+            padding: 100px 0;
+            text-shadow: 1px 1px 8px #000;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(45,62,80,0.7), rgba(52,73,94,0.7));
+            z-index: 1;
+        }
+        .hero .container {
+            position: relative;
+            z-index: 2;
+        }
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .nav-link {
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+        .navbar-brand img {
+            max-width: 120px;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
+        .navbar-brand:hover img {
+            transform: scale(1.05);
+        }
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40,167,69,0.3);
+        }
+        .social-btn {
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 12px 20px;
+            border-radius: 8px;
+            min-width: 140px;
+            justify-content: center;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .social-btn.facebook:hover {
+            background: #1877F2 !important;
+            color: white !important;
+        }
+        .social-btn.instagram:hover {
+            background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D) !important;
+            color: white !important;
+            border-color: transparent !important;
+        }
+        .social-icon {
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .fidelizacion-card {
+            background: linear-gradient(135deg, #232526 0%, #e0e0e0 100%);
+            color: #232526;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .fidelizacion-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .fidelizacion-card p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        .feature-item {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        /* Estilos mejorados para botones de autenticación */
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: 10px;
+        }
+        
+        .btn-login {
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-login:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+        }
+        
+        .btn-register {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+        }
+        
+        .btn-register:hover {
+            background: linear-gradient(45deg, #20c997, #28a745);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40,167,69,0.4);
+        }
+        
+        .auth-icon {
+            font-size: 16px;
+        }
+        
+        /* Responsive para móviles y tablets */
+        @media (max-width: 768px) {
+            /* Navbar responsive */
+            .navbar-brand {
+                font-size: 1.4rem !important;
+            }
+            
+            .navbar-brand img {
+                height: 40px !important;
+                margin-right: 10px !important;
+            }
+            
+            .auth-buttons {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .btn-login, .btn-register {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+            
+
+            
+            .nav-separator {
+                display: none !important;
+            }
+            
+            /* Hero section responsive */
+            .hero {
+                padding: 60px 0;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem !important;
+                line-height: 1.2;
+            }
+            
+            .hero .lead {
+                font-size: 1.1rem !important;
+            }
+            
+            .hero .btn {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+            
+            /* Fidelización card responsive */
+            .fidelizacion-card {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+            
+            .fidelizacion-card h3 {
+                font-size: 2rem;
+            }
+            
+            .fidelizacion-card .row > div {
+                margin-bottom: 1rem;
+            }
+            
+            /* Feature grid responsive */
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin: 2rem 0;
+            }
+            
+            .feature-item {
+                padding: 1.5rem;
+            }
+            
+            .feature-icon {
+                font-size: 2.5rem;
+            }
+            
+            /* Social buttons responsive */
+            .social-btn {
+                min-width: 120px;
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            /* User stats responsive */
+            .user-stats {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Responsive para tablets */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .hero h1 {
+                font-size: 3rem !important;
+            }
+            
+            .fidelizacion-card h3 {
+                font-size: 2.2rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .navbar-brand {
+                font-size: 1.5rem !important;
+            }
+        }
+        
+        /* Responsive para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .hero {
+                padding: 40px 0;
+            }
+            
+            .hero h1 {
+                font-size: 2rem !important;
+            }
+            
+            .hero .lead {
+                font-size: 1rem !important;
+            }
+            
+            .fidelizacion-card {
+                padding: 1rem;
+            }
+            
+            .fidelizacion-card h3 {
+                font-size: 1.8rem;
+            }
+            
+            .feature-item {
+                padding: 1rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem !important;
+            }
+            
+            .navbar-brand img {
+                height: 35px !important;
+                margin-right: 8px !important;
+            }
+        }
+        
+        /* Estilos para mensaje de bienvenida personalizado */
+        .welcome-message {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .user-stats {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-outline-light {
+            border: 2px solid #fff;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+
+        
+        /* Separador visual */
+        .nav-separator {
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent);
+            margin: 0 10px;
+        }
+
+
+        /* Estilos para los 6 botones del navbar */
+        .navbar-buttons-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid #ffffff;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ffffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.15);
+        }
+        
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: #ffffff;
+            border-color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44,62,80,0.25);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(44,62,80,0.25);
+        }
+        
+
+        
+        .custom-navbar {
+            background: #181818 !important;
+            box-shadow: none;
+            border: none;
+            min-height: 70px;
+        }
+        
+        /* Responsive para móviles */
+        @media (max-width: 991px) {
+            .navbar-buttons-container {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+                margin-top: 15px;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                min-width: unset;
+                justify-content: center;
+                padding: 15px 20px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Responsive para tablets */
+        @media (min-width: 768px) and (max-width: 1200px) {
+            .navbar-buttons-container {
+                gap: 10px;
+            }
+            
+            .nav-btn {
+                min-width: 120px;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* --- Navbar minimalista para los primeros 5 botones --- */
+        .navbar-buttons-container {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .nav-link-minimal {
+            color: #e0e0e0;
+            background: none;
+            border: none;
+            font-size: 0.97rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-decoration: none;
+            padding: 0 2px;
+            transition: color 0.2s, font-weight 0.2s;
+            position: relative;
+        }
+        .nav-link-minimal.active,
+        .nav-link-minimal:focus,
+        .nav-link-minimal:hover {
+            color: #fff;
+            font-weight: 900;
+        }
+        .nav-link-minimal.active::after {
+            content: '';
+            display: block;
+            margin: 0 auto;
+            width: 60%;
+            border-bottom: 2px solid #fff;
+            margin-top: 2px;
+        }
+        
+        /* Estilos para el botón de cerrar sesión */
+        .logout-btn {
+            color: #ff6b6b !important;
+            font-weight: 600 !important;
+            border: 1px solid #ff6b6b !important;
+            border-radius: 15px !important;
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .logout-btn:hover {
+            background: #ff6b6b !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,107,107,0.3);
+        }
+        
+        .logout-btn::after {
+            display: none !important;
+        }
+        /* --- Fin navbar minimalista --- */
+    </style>
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+        <div class="container">
+            <div class="mx-auto w-100 d-flex justify-content-center">
+                <div class="navbar-buttons-container">
+                    <a href="/" class="nav-link-minimal {% if request.path == '/' %}active{% endif %}">INICIO</a>
+                    <a href="/reservas" class="nav-link-minimal {% if request.path.startswith('/reservas') %}active{% endif %}">RESERVAS</a>
+                    {% if current_user.is_authenticated %}
+                        <a href="/perfil" class="nav-link-minimal {% if request.path.startswith('/perfil') %}active{% endif %}">MI PERFIL</a>
+                        {% if current_user.is_admin %}
+                        <a href="/admin/login" class="nav-link-minimal {% if request.path.startswith('/admin') %}active{% endif %}">ADMINISTRADOR</a>
+                        {% endif %}
+                        <a href="/logout" class="nav-link-minimal logout-btn">CERRAR SESIÓN</a>
+                    {% else %}
+                        <a href="/login" class="nav-link-minimal {% if request.path.startswith('/login') %}active{% endif %}">INICIAR SESIÓN</a>
+                        <a href="/registro" class="nav-link-minimal {% if request.path.startswith('/registro') %}active{% endif %}">REGISTRARSE</a>
+                    {% endif %}
+                </div>
+            </div>
+            <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- BLOQUE ELIMINADO: navbar antiguo duplicado -->
+        </div>
+    </nav>
+
+
+
+    <!-- Hero Section -->
+    <section class="hero text-center">
+        <div class="container">
+            {% if current_user.is_authenticated %}
+                <div class="welcome-message">
+                    <h1 class="display-3 fw-bold">¡Bienvenido de vuelta, {{ current_user.nombre }}! 👋</h1>
+                    <p class="lead fs-4">Nos alegra verte de nuevo en Patagonia. ¿Listo para disfrutar de nuestra gastronomía patagónica?</p>
+                    <div class="mt-4">
+                        <a href="/reservas" class="btn btn-lg btn-success me-3">¡Haz tu reserva ahora!</a>
+                        <a href="/perfil" class="btn btn-lg btn-outline-light">Ver mi perfil</a>
+                    </div>
+                    <div class="mt-3 user-stats">
+                        <small class="text-light">
+                            💎 Tienes {{ current_user.puntos }} puntos acumulados | 
+                            🏆 Nivel: {{ current_user.nivel }}
+                        </small>
+                    </div>
+                </div>
+            {% else %}
+            <img src="{{ url_for('static', filename='patagonia.png') }}" alt="Logo Patagonia Raw Bar" style="display:block; margin: 0 auto 18px auto; width:220px; max-width:95vw;">
+            <h1 style="font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; font-size: 2.2rem; letter-spacing: 2px; margin-bottom: 18px;">Bienvenidos a Patagonia Raw Bar</h1>
+                <p class="lead fs-4">{{ config.get('descripcion_hero', 'Ubicado en Arica, ofrecemos lo mejor de la gastronomía patagónica en el norte de Chile.') }}</p>
+            <a href="/reservas" class="btn btn-lg btn-success mt-4">¡Haz tu reserva ahora!</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Banner emocional para no logueados -->
+    {% if not current_user.is_authenticated %}
+    <div class="container my-5">
+        <div class="fidelizacion-card" style="background: linear-gradient(135deg, #232526 0%, #e0e0e0 100%); color: #232526; text-align: center;">
+            <h3 style="font-size:2rem; font-weight:700; margin-bottom:1rem;">¡Queremos sorprenderte!</h3>
+            <p style="font-size:1.15rem; opacity:0.95;">Regístrate y recibe beneficios exclusivos, sorpresas y descuentos solo para quienes son parte de nuestra familia Patagonia Raw Bar.</p>
+            <a href="/registro" class="btn btn-dark btn-lg mt-3">Quiero ser parte</a>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Programa de puntos y descuentos para usuarios logueados -->
+    {% if current_user.is_authenticated %}
+    <div class="container my-5">
+        <div class="fidelizacion-card" style="background: linear-gradient(135deg, #232526 0%, #e0e0e0 100%); color: #232526; text-align: center;">
+            <h3 style="font-size:2rem; font-weight:700; margin-bottom:1rem;">¡Gracias por ser parte de nuestra familia!</h3>
+            <p class="mb-3" style="font-size:1.1rem;">Acumula puntos en cada visita y disfruta de descuentos y sorpresas pensadas para ti.</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <h4 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ current_user.puntos }}</h4>
+                        <p style="opacity: 0.8;">Tus puntos acumulados</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <h4 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ current_user.nivel }}</h4>
+                        <p style="opacity: 0.8;">Tu nivel de cliente</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <h4 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ current_user.puntos|int // 10 }}%</h4>
+                        <p style="opacity: 0.8;">Descuento estimado*</p>
+                    </div>
+                </div>
+            </div>
+            <small class="d-block mt-2" style="opacity:0.7;">*El descuento puede variar según promociones y nivel.</small>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Características Destacadas -->
+    <div class="container my-5">
+        <div class="feature-grid">
+            <div class="feature-item">
+                <span class="feature-icon">🍽️</span>
+                <h4>Gastronomía Patagónica</h4>
+                <p>Los mejores platos típicos de la Patagonia con ingredientes frescos y de calidad.</p>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">👥</span>
+                <h4>Ambiente Familiar</h4>
+                <p>Un lugar cálido y acogedor donde te sentirás como en casa.</p>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">⭐</span>
+                <h4>Atención Personalizada</h4>
+                <p>Servicio de primera clase con atención a cada detalle.</p>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🎯</span>
+                <h4>Programa de Fidelización</h4>
+                <p>Gana puntos en cada visita y disfruta de descuentos y beneficios exclusivos.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redes Sociales y Contacto -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow p-4">
+                    <h3 class="mb-3">Síguenos</h3>
+                    <div class="d-flex gap-3">
+                        <a href="{{ config.get('facebook_url', '#') }}" target="_blank" class="btn btn-light d-flex align-items-center social-btn facebook" style="border: 2px solid #1877F2; color: #1877F2;">
+                            <span class="social-icon">f</span>
+                            Facebook
+                        </a>
+                        <a href="{{ config.get('instagram_url', '#') }}" target="_blank" class="btn btn-light d-flex align-items-center social-btn instagram" style="border: 2px solid #E4405F; color: #E4405F;">
+                            <span class="social-icon">📷</span>
+                            Instagram
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow p-4">
+                    <h3 class="mb-3">Información de Contacto</h3>
+                    <p><strong>Teléfono:</strong> {{ config.get('telefono', '+56 58 123 4567') }}</p>
+                    <p><strong>Dirección:</strong> {{ config.get('direccion', 'Av. Principal 123, Arica, Chile') }}</p>
+                    <p><strong>Horario:</strong> {{ config.get('horario', 'Lunes a Domingo: 12:00 - 23:00') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
