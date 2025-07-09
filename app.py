@@ -13,9 +13,17 @@ from email.mime.multipart import MIMEMultipart
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'patagonia.db')
+
+# Configuración de base de datos para producción
+if os.environ.get('DATABASE_URL'):
+    # Para producción (PostgreSQL)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+else:
+    # Para desarrollo (SQLite)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'patagonia.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'patagonia_arica_super_secret_2024'
+app.secret_key = os.environ.get('SECRET_KEY', 'patagonia_arica_super_secret_2024')
 db = SQLAlchemy(app)
 
 # Configuración de Flask-Login
