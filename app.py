@@ -185,15 +185,16 @@ def reservas():
             otorgar_puntos_reserva(current_user, reserva)
         
         # Enviar notificaciones
-        try:
-            resultados = notificar_reserva(reserva)
-            if resultados.get('email_cliente') or resultados.get('whatsapp_cliente'):
-                flash('¡Reserva enviada! Te hemos enviado una confirmación por email/WhatsApp.')
-            else:
-                flash('¡Reserva enviada! Será confirmada por el restaurante.')
-        except Exception as e:
-            print(f"Error enviando notificaciones: {e}")
-            flash('¡Reserva enviada! Será confirmada por el restaurante.')
+        # try:
+        #     resultados = notificar_reserva(reserva)
+        #     if resultados.get('email_cliente') or resultados.get('whatsapp_cliente'):
+        #         flash('¡Reserva enviada! Te hemos enviado una confirmación por email/WhatsApp.')
+        #     else:
+        #         flash('¡Reserva enviada! Será confirmada por el restaurante.')
+        # except Exception as e:
+        #     print(f"Error enviando notificaciones: {e}")
+        #     flash('¡Reserva enviada! Será confirmada por el restaurante.')
+        flash('¡Reserva enviada! Será confirmada por el restaurante.')
         
         return redirect(url_for('reservas'))
     
