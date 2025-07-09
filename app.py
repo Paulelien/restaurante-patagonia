@@ -345,8 +345,21 @@ def otorgar_puntos_reserva(usuario, reserva):
         db.session.commit()
 
 def get_configuracion():
-    configs = Configuracion.query.all()
-    return {config.clave: config.valor for config in configs}
+    try:
+        configs = Configuracion.query.all()
+        return {config.clave: config.valor for config in configs}
+    except Exception as e:
+        print(f"Error obteniendo configuración: {e}")
+        # Configuración por defecto si hay error
+        return {
+            'titulo_sitio': 'Restaurante Patagonia - Arica',
+            'descripcion_hero': 'Ubicado en Arica, ofrecemos lo mejor de la gastronomía patagónica en el norte de Chile.',
+            'facebook_url': 'https://facebook.com/patagoniaarica',
+            'instagram_url': 'https://instagram.com/patagoniaarica',
+            'telefono': '+56 58 123 4567',
+            'direccion': 'Av. Principal 123, Arica, Chile',
+            'horario': 'Lunes a Domingo: 12:00 - 23:00'
+        }
 
 def guardar_configuracion(clave, valor):
     config = Configuracion.query.filter_by(clave=clave).first()
