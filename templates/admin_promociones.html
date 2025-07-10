@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Promociones - Admin Patagonia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2d3e50 0%, #34495e 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2d3e50, #34495e);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45,62,80,0.3);
+        }
+        .btn-success {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-success:hover {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39,174,96,0.3);
+        }
+        .btn-warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-warning:hover {
+            background: linear-gradient(45deg, #e67e22, #f39c12);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243,156,18,0.3);
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(45deg, #c0392b, #e74c3c);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231,76,60,0.3);
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-activo {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        .status-inactivo {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+        .promocion-card {
+            border-left: 5px solid #3498db;
+            transition: all 0.3s ease;
+        }
+        .promocion-card:hover {
+            border-left-color: #2980b9;
+            transform: translateX(5px);
+        }
+        .descuento-badge {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .fecha-badge {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        .tipo-badge {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin">
+                <i class="fas fa-gift me-2"></i>
+                Gestión de Promociones
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin">
+                    <i class="fas fa-home me-1"></i>Panel Principal
+                </a>
+                <a class="nav-link" href="/admin/configuracion">
+                    <i class="fas fa-cogs me-1"></i>Configuración
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-gift me-2"></i>
+                    Gestión de Promociones Especiales
+                </h2>
+                <p class="text-muted">Crea y gestiona promociones especiales para fechas importantes</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/admin/promociones/nueva" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Nueva Promoción
+                </a>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-gift fa-2x text-primary mb-2"></i>
+                        <h4 class="fw-bold">{{ promociones|length }}</h4>
+                        <small class="text-muted">Total Promociones</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h4 class="fw-bold">{{ promociones|selectattr('activo')|list|length }}</h4>
+                        <small class="text-muted">Promociones Activas</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-2x text-warning mb-2"></i>
+                        <h4 class="fw-bold">{{ promociones|selectattr('activo')|selectattr('fecha_inicio', '<=', today)|selectattr('fecha_fin', '>=', today)|list|length }}</h4>
+                        <small class="text-muted">Promociones Vigentes</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-2x text-info mb-2"></i>
+                        <h4 class="fw-bold">{{ promociones|sum(attribute='puntos_extra') }}</h4>
+                        <small class="text-muted">Puntos Extra Totales</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Promociones -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Promoción</th>
+                                <th>Tipo</th>
+                                <th>Descuento</th>
+                                <th>Vigencia</th>
+                                <th>Estado</th>
+                                <th>Puntos Extra</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for promocion in promociones %}
+                            <tr class="promocion-card">
+                                <td>
+                                    <div>
+                                        <strong>{{ promocion.nombre }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ promocion.descripcion[:50] }}{% if promocion.descripcion|length > 50 %}...{% endif %}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="tipo-badge">
+                                        {{ promocion.tipo_promocion }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="descuento-badge">
+                                        {% if promocion.tipo_descuento == 'porcentaje' %}
+                                            {{ promocion.valor_descuento }}%
+                                        {% else %}
+                                            ${{ "{:,.0f}".format(promocion.valor_descuento) }}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fecha-badge mb-1">
+                                            {{ promocion.fecha_inicio.strftime('%d/%m/%Y') }}
+                                        </span>
+                                        <span class="fecha-badge">
+                                            {{ promocion.fecha_fin.strftime('%d/%m/%Y') }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if promocion.activo %}
+                                        <span class="status-badge status-activo">
+                                            <i class="fas fa-check-circle me-1"></i>Activa
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-inactivo">
+                                            <i class="fas fa-pause-circle me-1"></i>Inactiva
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if promocion.puntos_extra > 0 %}
+                                        <span class="badge bg-warning text-dark">
+                                            +{{ promocion.puntos_extra }} pts
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/admin/promociones/editar/{{ promocion.id }}" 
+                                           class="btn btn-sm btn-warning" 
+                                           title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="/admin/promociones/eliminar/{{ promocion.id }}" 
+                                           class="btn btn-sm btn-danger" 
+                                           title="Eliminar"
+                                           onclick="return confirm('¿Estás seguro de eliminar esta promoción?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if not promociones %}
+        <div class="text-center mt-5">
+            <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No hay promociones configuradas</h4>
+            <p class="text-muted">Comienza creando promociones especiales para fechas importantes</p>
+        </div>
+        {% endif %}
+
+        <!-- Información adicional -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="fw-bold text-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Tipos de Promociones Disponibles
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="mb-0 text-muted">
+                            <li><strong>Festivo:</strong> Promociones para días festivos nacionales</li>
+                            <li><strong>Cumpleaños:</strong> Descuentos especiales para cumpleaños</li>
+                            <li><strong>Aniversario:</strong> Celebración de aniversarios del restaurante</li>
+                            <li><strong>Estacional:</strong> Promociones por temporada</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="mb-0 text-muted">
+                            <li><strong>Grupo:</strong> Descuentos para grupos grandes</li>
+                            <li><strong>Fidelización:</strong> Promociones para "Nuestra Familia Patagonia"</li>
+                            <li><strong>Evento:</strong> Promociones para eventos especiales</li>
+                            <li><strong>Personalizada:</strong> Promociones con criterios específicos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

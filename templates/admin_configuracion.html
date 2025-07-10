@@ -150,9 +150,43 @@
                                                value="{{ config.get('direccion', 'Av. Principal 123, Arica, Chile') }}">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="config_horario" class="form-label">Horario</label>
-                                        <input type="text" class="form-control" id="config_horario" name="config_horario" 
-                                               value="{{ config.get('horario', 'Lunes a Domingo: 12:00 - 23:00') }}">
+                                        <label class="form-label fw-bold">Horarios de Atención</label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="config_horario_semana" class="form-label text-muted">Días de Semana</label>
+                                                <input type="text" class="form-control" id="config_horario_semana" name="config_horario_semana" 
+                                                       placeholder="Ej: Lunes a Viernes: 12:00 - 22:00"
+                                                       value="{{ config.get('horario_semana', 'Lunes a Viernes: 12:00 - 22:00') }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="config_horario_finde" class="form-label text-muted">Fines de Semana y Festivos</label>
+                                                <input type="text" class="form-control" id="config_horario_finde" name="config_horario_finde" 
+                                                       placeholder="Ej: Sábados y Domingos: 12:00 - 23:00"
+                                                       value="{{ config.get('horario_finde', 'Sábados y Domingos: 12:00 - 23:00') }}">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Los horarios se mostrarán automáticamente según el día actual</small>
+                                        
+                                        <!-- Vista previa de horarios -->
+                                        <div class="mt-3 p-3 bg-light rounded">
+                                            <h6 class="fw-bold mb-2">Vista Previa de Horarios:</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Días de Semana:</small>
+                                                    <div class="fw-bold">{{ config.get('horario_semana', 'Lunes a Viernes: 12:00 - 22:00') }}</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Fines de Semana y Festivos:</small>
+                                                    <div class="fw-bold">{{ config.get('horario_finde', 'Sábados y Domingos: 12:00 - 23:00') }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-muted">Horario actual ({{ config.get('horario_actual', 'Lunes a Viernes: 12:00 - 22:00') }}):</small>
+                                                <div class="badge {% if 'Festivo' in config.get('horario_actual', '') %}bg-warning{% elif 'Sábados' in config.get('horario_actual', '') %}bg-info{% else %}bg-success{% endif %}">
+                                                    {{ config.get('horario_actual', 'Lunes a Viernes: 12:00 - 22:00') }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

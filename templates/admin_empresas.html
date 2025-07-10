@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Empresas - Admin Patagonia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2d3e50 0%, #34495e 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2d3e50, #34495e);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45,62,80,0.3);
+        }
+        .btn-success {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-success:hover {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52,73,94,0.3);
+        }
+        .btn-warning {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-warning:hover {
+            background: linear-gradient(45deg, #34495e, #2d3e50);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44,62,80,0.3);
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .table thead th {
+            background: linear-gradient(45deg, #2d3e50, #34495e);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-activo {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-inactivo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-vencido {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin">
+                <i class="fas fa-building me-2"></i>
+                Gestión de Empresas
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin">
+                    <i class="fas fa-home me-1"></i>Panel Principal
+                </a>
+                <a class="nav-link" href="/admin/eventos">
+                    <i class="fas fa-calendar-alt me-1"></i>Eventos
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-building me-2"></i>
+                    Empresas en Convenio
+                </h2>
+                <p class="text-muted">Gestiona las empresas que tienen convenio con Patagonia</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/admin/empresas/nueva" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Nueva Empresa
+                </a>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ empresas|length }}</h3>
+                        <p class="mb-0">Total Empresas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">{{ empresas|selectattr('estado', 'equalto', 'activo')|list|length }}</h3>
+                        <p class="mb-0">Activas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning">{{ empresas|selectattr('estado', 'equalto', 'inactivo')|list|length }}</h3>
+                        <p class="mb-0">Inactivas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-danger">{{ empresas|selectattr('estado', 'equalto', 'vencido')|list|length }}</h3>
+                        <p class="mb-0">Vencidas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Empresas -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Empresa</th>
+                                <th>Contacto</th>
+                                <th>Empleados</th>
+                                <th>Descuento</th>
+                                <th>Estado</th>
+                                <th>Vencimiento</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for empresa in empresas %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ empresa.nombre }}</strong>
+                                        <br>
+                                        <small class="text-muted">RUT: {{ empresa.rut }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ empresa.nombre_contacto }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-envelope me-1"></i>{{ empresa.email_contacto }}
+                                            <br>
+                                            <i class="fas fa-phone me-1"></i>{{ empresa.telefono_contacto }}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ empresa.numero_empleados }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ empresa.descuento_porcentaje }}%</span>
+                                </td>
+                                <td>
+                                    {% if empresa.estado == 'activo' %}
+                                        <span class="status-badge status-activo">
+                                            <i class="fas fa-check-circle me-1"></i>Activo
+                                        </span>
+                                    {% elif empresa.estado == 'inactivo' %}
+                                        <span class="status-badge status-inactivo">
+                                            <i class="fas fa-pause-circle me-1"></i>Inactivo
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-vencido">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Vencido
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if empresa.fecha_vencimiento %}
+                                        <small>{{ empresa.fecha_vencimiento.strftime('%d/%m/%Y') }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Sin fecha</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/admin/empresas/editar/{{ empresa.id }}" 
+                                           class="btn btn-sm btn-warning" 
+                                           title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="/admin/eventos/nuevo?empresa_id={{ empresa.id }}" 
+                                           class="btn btn-sm btn-primary" 
+                                           title="Nuevo Evento">
+                                            <i class="fas fa-calendar-plus"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if not empresas %}
+        <div class="text-center mt-5">
+            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No hay empresas registradas</h4>
+            <p class="text-muted">Comienza agregando la primera empresa en convenio</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

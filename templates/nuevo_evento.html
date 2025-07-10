@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuevo Evento - Admin Patagonia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2d3e50 0%, #34495e 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2d3e50, #34495e);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45,62,80,0.3);
+        }
+        .btn-secondary {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52,73,94,0.3);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        .required {
+            color: #dc3545;
+        }
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .preview-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/eventos">
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver a Eventos
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin">
+                    <i class="fas fa-home me-1"></i>Panel Principal
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-dark">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        Nuevo Evento Corporativo
+                    </h2>
+                    <p class="text-muted">Registra un nuevo evento o catering para una empresa en convenio</p>
+                </div>
+
+                <!-- Formulario -->
+                <div class="card">
+                    <div class="card-body p-4">
+                        <form method="POST" id="eventoForm">
+                            <!-- Información Básica -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-primary mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Información del Evento
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="empresa_id" class="form-label">
+                                        Empresa <span class="required">*</span>
+                                    </label>
+                                    <select class="form-select" id="empresa_id" name="empresa_id" required>
+                                        <option value="">Selecciona una empresa</option>
+                                        {% for empresa in empresas %}
+                                        <option value="{{ empresa.id }}" 
+                                                data-descuento="{{ empresa.descuento_porcentaje }}">
+                                            {{ empresa.nombre }} ({{ empresa.descuento_porcentaje }}% desc.)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="nombre_evento" class="form-label">
+                                        Nombre del Evento <span class="required">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="nombre_evento" 
+                                           name="nombre_evento" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="tipo_evento" class="form-label">
+                                        Tipo de Evento <span class="required">*</span>
+                                    </label>
+                                    <select class="form-select" id="tipo_evento" name="tipo_evento" required>
+                                        <option value="">Selecciona el tipo</option>
+                                        <option value="almuerzo">Almuerzo</option>
+                                        <option value="cena">Cena</option>
+                                        <option value="coffee break">Coffee Break</option>
+                                        <option value="evento especial">Evento Especial</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="numero_personas" class="form-label">
+                                        Número de Personas <span class="required">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" id="numero_personas" 
+                                           name="numero_personas" min="1" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="fecha_evento" class="form-label">
+                                        Fecha del Evento <span class="required">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="fecha_evento" 
+                                           name="fecha_evento" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="hora_inicio" class="form-label">
+                                        Hora de Inicio <span class="required">*</span>
+                                    </label>
+                                    <input type="time" class="form-control" id="hora_inicio" 
+                                           name="hora_inicio" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="hora_fin" class="form-label">
+                                        Hora de Fin <span class="required">*</span>
+                                    </label>
+                                    <input type="time" class="form-control" id="hora_fin" 
+                                           name="hora_fin" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="lugar_evento" class="form-label">
+                                        Lugar del Evento <span class="required">*</span>
+                                    </label>
+                                    <select class="form-select" id="lugar_evento" name="lugar_evento" required>
+                                        <option value="Restaurante">Restaurante</option>
+                                        <option value="Oficina">Oficina de la Empresa</option>
+                                        <option value="Otro">Otro lugar</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="direccion_evento" class="form-label">
+                                        Dirección del Evento
+                                    </label>
+                                    <input type="text" class="form-control" id="direccion_evento" 
+                                           name="direccion_evento" placeholder="Solo si es fuera del restaurante">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="menu_seleccionado" class="form-label">Menú Seleccionado</label>
+                                    <textarea class="form-control" id="menu_seleccionado" name="menu_seleccionado" 
+                                              rows="3" placeholder="Describe el menú o platos específicos..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Servicios Adicionales -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-primary mb-3">
+                                        <i class="fas fa-cogs me-2"></i>
+                                        Servicios Adicionales
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="bebidas_incluidas" 
+                                               name="bebidas_incluidas">
+                                        <label class="form-check-label" for="bebidas_incluidas">
+                                            <i class="fas fa-wine-glass me-1"></i>
+                                            Bebidas Incluidas
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="servicio_meseros" 
+                                               name="servicio_meseros">
+                                        <label class="form-check-label" for="servicio_meseros">
+                                            <i class="fas fa-user-tie me-1"></i>
+                                            Servicio de Meseros
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="decoracion" 
+                                               name="decoracion">
+                                        <label class="form-check-label" for="decoracion">
+                                            <i class="fas fa-palette me-1"></i>
+                                            Decoración
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="presupuesto_estimado" class="form-label">Presupuesto Estimado</label>
+                                    <input type="number" class="form-control" id="presupuesto_estimado" 
+                                           name="presupuesto_estimado" placeholder="En pesos chilenos">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="observaciones" class="form-label">Observaciones</label>
+                                    <textarea class="form-control" id="observaciones" name="observaciones" 
+                                              rows="2" placeholder="Información adicional..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary me-3">
+                                        <i class="fas fa-save me-2"></i>Guardar Evento
+                                    </button>
+                                    <a href="/admin/eventos" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview del Precio -->
+            <div class="col-lg-4">
+                <div class="card preview-card sticky-top" style="top: 20px;">
+                    <div class="card-body text-center">
+                        <h5 class="mb-3">
+                            <i class="fas fa-calculator me-2"></i>
+                            Estimación de Precio
+                        </h5>
+                        
+                        <div class="mb-3">
+                            <h6>Precio Base</h6>
+                            <h4 id="precioBase">$0</h4>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Servicios Adicionales</h6>
+                            <div id="serviciosAdicionales" class="text-start">
+                                <small>No hay servicios adicionales</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Descuento</h6>
+                            <h5 id="descuento">0%</h5>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <h6>Precio Final</h6>
+                            <h3 id="precioFinal">$0</h3>
+                        </div>
+
+                        <small class="text-light">
+                            * Los precios son estimados y pueden variar
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Calcular precio en tiempo real
+        function calcularPrecio() {
+            const personas = parseInt(document.getElementById('numero_personas').value) || 0;
+            const bebidas = document.getElementById('bebidas_incluidas').checked;
+            const meseros = document.getElementById('servicio_meseros').checked;
+            const decoracion = document.getElementById('decoracion').checked;
+            
+            // Obtener descuento de la empresa seleccionada
+            const empresaSelect = document.getElementById('empresa_id');
+            const empresaOption = empresaSelect.options[empresaSelect.selectedIndex];
+            const descuento = empresaOption ? parseInt(empresaOption.dataset.descuento) || 0 : 0;
+            
+            // Cálculo del precio
+            let precioBase = personas * 15000; // $15,000 por persona
+            let serviciosAdicionales = 0;
+            let serviciosTexto = [];
+            
+            if (bebidas) {
+                serviciosAdicionales += personas * 3000;
+                serviciosTexto.push(`Bebidas: $${(personas * 3000).toLocaleString()}`);
+            }
+            
+            if (meseros) {
+                serviciosAdicionales += 50000;
+                serviciosTexto.push(`Meseros: $50,000`);
+            }
+            
+            if (decoracion) {
+                serviciosAdicionales += 30000;
+                serviciosTexto.push(`Decoración: $30,000`);
+            }
+            
+            const subtotal = precioBase + serviciosAdicionales;
+            const descuentoMonto = Math.round(subtotal * (descuento / 100));
+            const precioFinal = subtotal - descuentoMonto;
+            
+            // Actualizar la interfaz
+            document.getElementById('precioBase').textContent = `$${precioBase.toLocaleString()}`;
+            document.getElementById('descuento').textContent = `${descuento}% (-$${descuentoMonto.toLocaleString()})`;
+            document.getElementById('precioFinal').textContent = `$${precioFinal.toLocaleString()}`;
+            
+            const serviciosDiv = document.getElementById('serviciosAdicionales');
+            if (serviciosTexto.length > 0) {
+                serviciosDiv.innerHTML = serviciosTexto.map(s => `<small>${s}</small><br>`).join('');
+            } else {
+                serviciosDiv.innerHTML = '<small>No hay servicios adicionales</small>';
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('numero_personas').addEventListener('input', calcularPrecio);
+        document.getElementById('bebidas_incluidas').addEventListener('change', calcularPrecio);
+        document.getElementById('servicio_meseros').addEventListener('change', calcularPrecio);
+        document.getElementById('decoracion').addEventListener('change', calcularPrecio);
+        document.getElementById('empresa_id').addEventListener('change', calcularPrecio);
+        
+        // Calcular precio inicial
+        calcularPrecio();
+    </script>
+</body>
+</html> 

@@ -708,7 +708,11 @@
                     <h3 class="mb-3">Información de Contacto</h3>
                     <p><strong>Teléfono:</strong> {{ config.get('telefono', '+56 58 123 4567') }}</p>
                     <p><strong>Dirección:</strong> {{ config.get('direccion', 'Av. Principal 123, Arica, Chile') }}</p>
-                    <p><strong>Horario:</strong> {{ config.get('horario', 'Lunes a Domingo: 12:00 - 23:00') }}</p>
+                    <p><strong>Horario:</strong> 
+                        <span class="badge {% if 'Festivo' in config.get('horario_actual', '') %}bg-warning{% elif 'Sábados' in config.get('horario_actual', '') %}bg-info{% else %}bg-success{% endif %}">
+                            {{ config.get('horario_actual', 'Lunes a Viernes: 12:00 - 22:00') }}
+                        </span>
+                    </p>
                 </div>
             </div>
         </div>

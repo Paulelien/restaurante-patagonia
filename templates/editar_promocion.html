@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Promoción - Admin Patagonia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #2d3e50 0%, #34495e 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2d3e50, #34495e);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45,62,80,0.3);
+        }
+        .btn-secondary {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #7f8c8d, #95a5a6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(149,165,166,0.3);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52,152,219,0.25);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2d3e50;
+            margin-bottom: 8px;
+        }
+        .required {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .info-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        .success-card {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        .warning-card {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/promociones">
+                <i class="fas fa-edit me-2"></i>
+                Editar Promoción
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/admin/promociones">
+                    <i class="fas fa-arrow-left me-1"></i>Volver a Promociones
+                </a>
+                <a class="nav-link" href="/admin">
+                    <i class="fas fa-home me-1"></i>Panel Principal
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h2 class="fw-bold text-dark text-center">
+                            <i class="fas fa-edit me-2"></i>
+                            Editar Promoción: {{ promocion.nombre }}
+                        </h2>
+                        <p class="text-muted text-center">Modifica los detalles de la promoción especial</p>
+                    </div>
+                </div>
+
+                <!-- Formulario -->
+                <div class="card">
+                    <div class="card-body p-4">
+                        <form method="POST">
+                            <!-- Información Básica -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-primary mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Información de la Promoción
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="nombre" class="form-label">
+                                        Nombre de la Promoción <span class="required">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                                           value="{{ promocion.nombre }}" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="tipo_promocion" class="form-label">
+                                        Tipo de Promoción <span class="required">*</span>
+                                    </label>
+                                    <select class="form-select" id="tipo_promocion" name="tipo_promocion" required>
+                                        <option value="festivo" {% if promocion.tipo_promocion == 'festivo' %}selected{% endif %}>Festivo</option>
+                                        <option value="cumpleaños" {% if promocion.tipo_promocion == 'cumpleaños' %}selected{% endif %}>Cumpleaños</option>
+                                        <option value="aniversario" {% if promocion.tipo_promocion == 'aniversario' %}selected{% endif %}>Aniversario</option>
+                                        <option value="estacional" {% if promocion.tipo_promocion == 'estacional' %}selected{% endif %}>Estacional</option>
+                                        <option value="grupo" {% if promocion.tipo_promocion == 'grupo' %}selected{% endif %}>Grupo</option>
+                                        <option value="fidelizacion" {% if promocion.tipo_promocion == 'fidelizacion' %}selected{% endif %}>Fidelización</option>
+                                        <option value="evento" {% if promocion.tipo_promocion == 'evento' %}selected{% endif %}>Evento</option>
+                                        <option value="personalizada" {% if promocion.tipo_promocion == 'personalizada' %}selected{% endif %}>Personalizada</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="descripcion" class="form-label">
+                                        Descripción <span class="required">*</span>
+                                    </label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required>{{ promocion.descripcion }}</textarea>
+                                </div>
+                            </div>
+
+                            <!-- Fechas de Vigencia -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-success mb-3">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        Período de Vigencia
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="fecha_inicio" class="form-label">
+                                        Fecha de Inicio <span class="required">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" 
+                                           value="{{ promocion.fecha_inicio.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="fecha_fin" class="form-label">
+                                        Fecha de Fin <span class="required">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" 
+                                           value="{{ promocion.fecha_fin.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                            </div>
+
+                            <!-- Descuentos -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-warning mb-3">
+                                        <i class="fas fa-percentage me-2"></i>
+                                        Configuración de Descuentos
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="tipo_descuento" class="form-label">
+                                        Tipo de Descuento <span class="required">*</span>
+                                    </label>
+                                    <select class="form-select" id="tipo_descuento" name="tipo_descuento" required>
+                                        <option value="porcentaje" {% if promocion.tipo_descuento == 'porcentaje' %}selected{% endif %}>Porcentaje (%)</option>
+                                        <option value="monto_fijo" {% if promocion.tipo_descuento == 'monto_fijo' %}selected{% endif %}>Monto Fijo ($)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="valor_descuento" class="form-label">
+                                        Valor del Descuento <span class="required">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" id="valor_descuento" name="valor_descuento" 
+                                           value="{{ promocion.valor_descuento }}" min="0" step="0.01" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="puntos_extra" class="form-label">
+                                        Puntos Extra "Nuestra Familia"
+                                    </label>
+                                    <input type="number" class="form-control" id="puntos_extra" name="puntos_extra" 
+                                           value="{{ promocion.puntos_extra }}" min="0">
+                                </div>
+                            </div>
+
+                            <!-- Condiciones -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-info mb-3">
+                                        <i class="fas fa-users me-2"></i>
+                                        Condiciones de Aplicación
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="minimo_personas" class="form-label">
+                                        Mínimo de Personas
+                                    </label>
+                                    <input type="number" class="form-control" id="minimo_personas" name="minimo_personas" 
+                                           value="{{ promocion.minimo_personas }}" min="1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="maximo_personas" class="form-label">
+                                        Máximo de Personas (opcional)
+                                    </label>
+                                    <input type="number" class="form-control" id="maximo_personas" name="maximo_personas" 
+                                           value="{{ promocion.maximo_personas or '' }}" min="1">
+                                </div>
+                            </div>
+
+                            <!-- Menú Especial -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-danger mb-3">
+                                        <i class="fas fa-utensils me-2"></i>
+                                        Menú Especial
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="menu_especial" class="form-label">
+                                        Nombre del Menú Especial
+                                    </label>
+                                    <input type="text" class="form-control" id="menu_especial" name="menu_especial" 
+                                           value="{{ promocion.menu_especial or '' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Incluye</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="incluye_bebidas" name="incluye_bebidas" 
+                                               {% if promocion.incluye_bebidas %}checked{% endif %}>
+                                        <label class="form-check-label" for="incluye_bebidas">
+                                            Bebidas incluidas
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="incluye_postre" name="incluye_postre" 
+                                               {% if promocion.incluye_postre %}checked{% endif %}>
+                                        <label class="form-check-label" for="incluye_postre">
+                                            Postre incluido
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-dark mb-3">
+                                        <i class="fas fa-toggle-on me-2"></i>
+                                        Estado de la Promoción
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="activo" name="activo" 
+                                               {% if promocion.activo %}checked{% endif %}>
+                                        <label class="form-check-label" for="activo">
+                                            <strong>Promoción Activa</strong> - Los clientes pueden usar esta promoción
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary me-3">
+                                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                                    </button>
+                                    <a href="/admin/promociones" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información de la promoción -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Información de la Promoción
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Creada:</strong> {{ promocion.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                                <p><strong>Estado:</strong> 
+                                    {% if promocion.activo %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactiva</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Descuento:</strong> 
+                                    {% if promocion.tipo_descuento == 'porcentaje' %}
+                                        {{ promocion.valor_descuento }}%
+                                    {% else %}
+                                        ${{ "{:,.0f}".format(promocion.valor_descuento) }}
+                                    {% endif %}
+                                </p>
+                                <p><strong>Puntos Extra:</strong> {{ promocion.puntos_extra }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación de fechas
+        document.getElementById('fecha_inicio').addEventListener('change', function() {
+            const fechaInicio = this.value;
+            const fechaFin = document.getElementById('fecha_fin').value;
+            
+            if (fechaFin && fechaInicio > fechaFin) {
+                alert('La fecha de inicio no puede ser posterior a la fecha de fin');
+                this.value = '';
+            }
+        });
+
+        document.getElementById('fecha_fin').addEventListener('change', function() {
+            const fechaFin = this.value;
+            const fechaInicio = document.getElementById('fecha_inicio').value;
+            
+            if (fechaInicio && fechaFin < fechaInicio) {
+                alert('La fecha de fin no puede ser anterior a la fecha de inicio');
+                this.value = '';
+            }
+        });
+
+        // Validación de descuento
+        document.getElementById('valor_descuento').addEventListener('input', function() {
+            const tipo = document.getElementById('tipo_descuento').value;
+            const valor = parseFloat(this.value);
+            
+            if (tipo === 'porcentaje' && valor > 100) {
+                alert('El descuento porcentual no puede ser mayor al 100%');
+                this.value = 100;
+            }
+        });
+    </script>
+</body>
+</html> 

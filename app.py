@@ -65,6 +65,45 @@ class Usuario(UserMixin, db.Model):
     reservas = db.relationship('Reserva', backref='usuario', lazy=True)
     transacciones = db.relationship('TransaccionPuntos', backref='usuario', lazy=True)
 
+class EmpresaConvenio(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200), nullable=False)
+    rut = db.Column(db.String(20), unique=True, nullable=False)
+    email_contacto = db.Column(db.String(120), nullable=False)
+    telefono_contacto = db.Column(db.String(20), nullable=False)
+    nombre_contacto = db.Column(db.String(100), nullable=False)
+    direccion = db.Column(db.String(200))
+    numero_empleados = db.Column(db.Integer, default=0)
+    descuento_porcentaje = db.Column(db.Integer, default=10)  # Descuento por defecto 10%
+    fecha_convenio = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_vencimiento = db.Column(db.DateTime)
+    estado = db.Column(db.String(20), default='activo')  # activo, inactivo, vencido
+    observaciones = db.Column(db.Text)
+    eventos = db.relationship('EventoCorporativo', backref='empresa', lazy=True)
+
+class EventoCorporativo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresa_convenio.id'), nullable=False)
+    nombre_evento = db.Column(db.String(200), nullable=False)
+    tipo_evento = db.Column(db.String(50), nullable=False)  # almuerzo, cena, coffee break, evento especial
+    fecha_evento = db.Column(db.DateTime, nullable=False)
+    hora_inicio = db.Column(db.String(10), nullable=False)
+    hora_fin = db.Column(db.String(10), nullable=False)
+    numero_personas = db.Column(db.Integer, nullable=False)
+    lugar_evento = db.Column(db.String(100), default='Restaurante')  # Restaurante, Oficina, Otro
+    direccion_evento = db.Column(db.String(200))
+    menu_seleccionado = db.Column(db.String(200))
+    bebidas_incluidas = db.Column(db.Boolean, default=False)
+    servicio_meseros = db.Column(db.Boolean, default=False)
+    decoracion = db.Column(db.Boolean, default=False)
+    presupuesto_estimado = db.Column(db.Integer)
+    descuento_aplicado = db.Column(db.Integer, default=0)
+    precio_final = db.Column(db.Integer)
+    estado = db.Column(db.String(20), default='pendiente')  # pendiente, confirmado, cancelado, completado
+    observaciones = db.Column(db.Text)
+    fecha_solicitud = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_confirmacion = db.Column(db.DateTime)
+
 class Reserva(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
@@ -91,6 +130,35 @@ class Configuracion(db.Model):
     clave = db.Column(db.String(50), unique=True, nullable=False)
     valor = db.Column(db.Text, nullable=False)
     descripcion = db.Column(db.String(200))
+
+class PromocionEspecial(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text, nullable=False)
+    tipo_promocion = db.Column(db.String(50), nullable=False)  # festivo, cumpleaños, aniversario, etc.
+    fecha_inicio = db.Column(db.Date, nullable=False)
+    fecha_fin = db.Column(db.Date, nullable=False)
+    tipo_descuento = db.Column(db.String(20), default='porcentaje')  # porcentaje, monto_fijo
+    valor_descuento = db.Column(db.Float, nullable=False)  # porcentaje o monto
+    minimo_personas = db.Column(db.Integer, default=1)
+    maximo_personas = db.Column(db.Integer)
+    menu_especial = db.Column(db.String(200))
+    incluye_bebidas = db.Column(db.Boolean, default=False)
+    incluye_postre = db.Column(db.Boolean, default=False)
+    puntos_extra = db.Column(db.Integer, default=0)  # puntos extra para "Nuestra Familia Patagonia"
+    activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relación con reservas que usaron esta promoción
+    reservas = db.relationship('ReservaPromocion', backref='promocion', lazy=True)
+
+class ReservaPromocion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    reserva_id = db.Column(db.Integer, db.ForeignKey('reserva.id'), nullable=False)
+    promocion_id = db.Column(db.Integer, db.ForeignKey('promocion_especial.id'), nullable=False)
+    descuento_aplicado = db.Column(db.Float, nullable=False)
+    puntos_extra_otorgados = db.Column(db.Integer, default=0)
+    fecha_aplicacion = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Rutas principales
 @app.route('/')
@@ -180,25 +248,29 @@ def reservas():
         db.session.add(reserva)
         db.session.commit()
         
+        # Aplicar promociones disponibles
+        promociones_aplicadas = aplicar_promociones(reserva)
+        
         # Otorgar puntos si es usuario registrado
         if current_user.is_authenticated:
             otorgar_puntos_reserva(current_user, reserva)
+            # Otorgar puntos extra de promociones
+            if promociones_aplicadas:
+                for promocion in promociones_aplicadas:
+                    if promocion.puntos_extra > 0:
+                        otorgar_puntos_extra(current_user, promocion.puntos_extra, f"Promoción: {promocion.nombre}")
         
-        # Enviar notificaciones
-        # try:
-        #     resultados = notificar_reserva(reserva)
-        #     if resultados.get('email_cliente') or resultados.get('whatsapp_cliente'):
-        #         flash('¡Reserva enviada! Te hemos enviado una confirmación por email/WhatsApp.')
-        #     else:
-        #         flash('¡Reserva enviada! Será confirmada por el restaurante.')
-        # except Exception as e:
-        #     print(f"Error enviando notificaciones: {e}")
-        #     flash('¡Reserva enviada! Será confirmada por el restaurante.')
-        flash('¡Reserva enviada! Será confirmada por el restaurante.')
+        # Preparar mensaje de confirmación
+        mensaje = '¡Reserva enviada! Será confirmada por el restaurante.'
+        if promociones_aplicadas:
+            mensaje += f' Se aplicaron {len(promociones_aplicadas)} promoción(es) especial(es).'
         
+        flash(mensaje)
         return redirect(url_for('reservas'))
     
-    return render_template('reservas.html')
+    # Obtener promociones activas para mostrar en la página
+    promociones_activas = obtener_promociones_activas()
+    return render_template('reservas.html', promociones=promociones_activas)
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -322,6 +394,289 @@ def contacto():
         return redirect(url_for('contacto'))
     return render_template('contacto.html')
 
+# Rutas para Empresas en Convenio y Eventos Corporativos
+@app.route('/admin/empresas')
+@admin_required
+def admin_empresas():
+    empresas = EmpresaConvenio.query.order_by(EmpresaConvenio.fecha_convenio.desc()).all()
+    return render_template('admin_empresas.html', empresas=empresas)
+
+@app.route('/admin/empresas/nueva', methods=['GET', 'POST'])
+@admin_required
+def nueva_empresa():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        rut = request.form['rut']
+        email_contacto = request.form['email_contacto']
+        telefono_contacto = request.form['telefono_contacto']
+        nombre_contacto = request.form['nombre_contacto']
+        direccion = request.form.get('direccion', '')
+        numero_empleados = int(request.form.get('numero_empleados', 0))
+        descuento_porcentaje = int(request.form.get('descuento_porcentaje', 10))
+        fecha_vencimiento = request.form.get('fecha_vencimiento')
+        observaciones = request.form.get('observaciones', '')
+        
+        # Verificar si el RUT ya existe
+        if EmpresaConvenio.query.filter_by(rut=rut).first():
+            flash('Ya existe una empresa con ese RUT')
+            return redirect(url_for('nueva_empresa'))
+        
+        # Convertir fecha de vencimiento si se proporciona
+        fecha_vencimiento_dt = None
+        if fecha_vencimiento:
+            try:
+                fecha_vencimiento_dt = datetime.strptime(fecha_vencimiento, '%Y-%m-%d')
+            except ValueError:
+                flash('Formato de fecha inválido')
+                return redirect(url_for('nueva_empresa'))
+        
+        empresa = EmpresaConvenio(
+            nombre=nombre,
+            rut=rut,
+            email_contacto=email_contacto,
+            telefono_contacto=telefono_contacto,
+            nombre_contacto=nombre_contacto,
+            direccion=direccion,
+            numero_empleados=numero_empleados,
+            descuento_porcentaje=descuento_porcentaje,
+            fecha_vencimiento=fecha_vencimiento_dt,
+            observaciones=observaciones
+        )
+        
+        db.session.add(empresa)
+        db.session.commit()
+        
+        flash(f'Empresa {nombre} registrada exitosamente')
+        return redirect(url_for('admin_empresas'))
+    
+    return render_template('nueva_empresa.html')
+
+@app.route('/admin/empresas/editar/<int:empresa_id>', methods=['GET', 'POST'])
+@admin_required
+def editar_empresa(empresa_id):
+    empresa = EmpresaConvenio.query.get_or_404(empresa_id)
+    
+    if request.method == 'POST':
+        empresa.nombre = request.form['nombre']
+        empresa.email_contacto = request.form['email_contacto']
+        empresa.telefono_contacto = request.form['telefono_contacto']
+        empresa.nombre_contacto = request.form['nombre_contacto']
+        empresa.direccion = request.form.get('direccion', '')
+        empresa.numero_empleados = int(request.form.get('numero_empleados', 0))
+        empresa.descuento_porcentaje = int(request.form.get('descuento_porcentaje', 10))
+        empresa.observaciones = request.form.get('observaciones', '')
+        
+        fecha_vencimiento = request.form.get('fecha_vencimiento')
+        if fecha_vencimiento:
+            try:
+                empresa.fecha_vencimiento = datetime.strptime(fecha_vencimiento, '%Y-%m-%d')
+            except ValueError:
+                flash('Formato de fecha inválido')
+                return redirect(url_for('editar_empresa', empresa_id=empresa_id))
+        
+        db.session.commit()
+        flash(f'Empresa {empresa.nombre} actualizada exitosamente')
+        return redirect(url_for('admin_empresas'))
+    
+    return render_template('editar_empresa.html', empresa=empresa)
+
+@app.route('/admin/eventos')
+@admin_required
+def admin_eventos():
+    eventos = EventoCorporativo.query.join(EmpresaConvenio).order_by(EventoCorporativo.fecha_evento.desc()).all()
+    return render_template('admin_eventos.html', eventos=eventos)
+
+@app.route('/admin/eventos/nuevo', methods=['GET', 'POST'])
+@admin_required
+def nuevo_evento():
+    if request.method == 'POST':
+        empresa_id = int(request.form['empresa_id'])
+        nombre_evento = request.form['nombre_evento']
+        tipo_evento = request.form['tipo_evento']
+        fecha_evento = request.form['fecha_evento']
+        hora_inicio = request.form['hora_inicio']
+        hora_fin = request.form['hora_fin']
+        numero_personas = int(request.form['numero_personas'])
+        lugar_evento = request.form.get('lugar_evento', 'Restaurante')
+        direccion_evento = request.form.get('direccion_evento', '')
+        menu_seleccionado = request.form.get('menu_seleccionado', '')
+        bebidas_incluidas = 'bebidas_incluidas' in request.form
+        servicio_meseros = 'servicio_meseros' in request.form
+        decoracion = 'decoracion' in request.form
+        presupuesto_estimado = request.form.get('presupuesto_estimado')
+        observaciones = request.form.get('observaciones', '')
+        
+        # Convertir fecha del evento
+        try:
+            fecha_evento_dt = datetime.strptime(fecha_evento, '%Y-%m-%d')
+        except ValueError:
+            flash('Formato de fecha inválido')
+            return redirect(url_for('nuevo_evento'))
+        
+        # Obtener empresa y calcular descuento
+        empresa = EmpresaConvenio.query.get_or_404(empresa_id)
+        descuento_aplicado = empresa.descuento_porcentaje
+        
+        # Calcular precio final (lógica simplificada)
+        precio_base = numero_personas * 15000  # $15,000 por persona como base
+        if bebidas_incluidas:
+            precio_base += numero_personas * 3000
+        if servicio_meseros:
+            precio_base += 50000
+        if decoracion:
+            precio_base += 30000
+        
+        descuento_monto = int(precio_base * (descuento_aplicado / 100))
+        precio_final = precio_base - descuento_monto
+        
+        evento = EventoCorporativo(
+            empresa_id=empresa_id,
+            nombre_evento=nombre_evento,
+            tipo_evento=tipo_evento,
+            fecha_evento=fecha_evento_dt,
+            hora_inicio=hora_inicio,
+            hora_fin=hora_fin,
+            numero_personas=numero_personas,
+            lugar_evento=lugar_evento,
+            direccion_evento=direccion_evento,
+            menu_seleccionado=menu_seleccionado,
+            bebidas_incluidas=bebidas_incluidas,
+            servicio_meseros=servicio_meseros,
+            decoracion=decoracion,
+            presupuesto_estimado=presupuesto_estimado,
+            descuento_aplicado=descuento_aplicado,
+            precio_final=precio_final,
+            observaciones=observaciones
+        )
+        
+        db.session.add(evento)
+        db.session.commit()
+        
+        flash(f'Evento {nombre_evento} registrado exitosamente')
+        return redirect(url_for('admin_eventos'))
+    
+    empresas = EmpresaConvenio.query.filter_by(estado='activo').all()
+    return render_template('nuevo_evento.html', empresas=empresas)
+
+@app.route('/admin/eventos/confirmar/<int:evento_id>')
+@admin_required
+def confirmar_evento(evento_id):
+    evento = EventoCorporativo.query.get_or_404(evento_id)
+    evento.estado = 'confirmado'
+    evento.fecha_confirmacion = datetime.utcnow()
+    db.session.commit()
+    flash(f'Evento {evento.nombre_evento} confirmado exitosamente')
+    return redirect(url_for('admin_eventos'))
+
+@app.route('/admin/eventos/cancelar/<int:evento_id>')
+@admin_required
+def cancelar_evento(evento_id):
+    evento = EventoCorporativo.query.get_or_404(evento_id)
+    evento.estado = 'cancelado'
+    db.session.commit()
+    flash(f'Evento {evento.nombre_evento} cancelado')
+    return redirect(url_for('admin_eventos'))
+
+# Rutas para gestión de promociones especiales
+@app.route('/admin/promociones')
+@admin_required
+def admin_promociones():
+    from datetime import datetime
+    promociones = PromocionEspecial.query.order_by(PromocionEspecial.fecha_inicio.desc()).all()
+    today = datetime.now().date()
+    return render_template('admin_promociones.html', promociones=promociones, today=today)
+
+@app.route('/admin/promociones/nueva', methods=['GET', 'POST'])
+@admin_required
+def nueva_promocion():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        descripcion = request.form['descripcion']
+        tipo_promocion = request.form['tipo_promocion']
+        fecha_inicio = request.form['fecha_inicio']
+        fecha_fin = request.form['fecha_fin']
+        tipo_descuento = request.form['tipo_descuento']
+        valor_descuento = float(request.form['valor_descuento'])
+        minimo_personas = int(request.form.get('minimo_personas', 1))
+        maximo_personas = request.form.get('maximo_personas')
+        menu_especial = request.form.get('menu_especial', '')
+        incluye_bebidas = 'incluye_bebidas' in request.form
+        incluye_postre = 'incluye_postre' in request.form
+        puntos_extra = int(request.form.get('puntos_extra', 0))
+        
+        # Validar fechas
+        try:
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Formato de fecha inválido')
+            return redirect(url_for('nueva_promocion'))
+        
+        if fecha_inicio_dt > fecha_fin_dt:
+            flash('La fecha de inicio no puede ser posterior a la fecha de fin')
+            return redirect(url_for('nueva_promocion'))
+        
+        promocion = PromocionEspecial(
+            nombre=nombre,
+            descripcion=descripcion,
+            tipo_promocion=tipo_promocion,
+            fecha_inicio=fecha_inicio_dt,
+            fecha_fin=fecha_fin_dt,
+            tipo_descuento=tipo_descuento,
+            valor_descuento=valor_descuento,
+            minimo_personas=minimo_personas,
+            maximo_personas=maximo_personas if maximo_personas else None,
+            menu_especial=menu_especial,
+            incluye_bebidas=incluye_bebidas,
+            incluye_postre=incluye_postre,
+            puntos_extra=puntos_extra
+        )
+        
+        db.session.add(promocion)
+        db.session.commit()
+        
+        flash(f'Promoción "{nombre}" creada exitosamente')
+        return redirect(url_for('admin_promociones'))
+    
+    return render_template('nueva_promocion.html')
+
+@app.route('/admin/promociones/editar/<int:promocion_id>', methods=['GET', 'POST'])
+@admin_required
+def editar_promocion(promocion_id):
+    promocion = PromocionEspecial.query.get_or_404(promocion_id)
+    
+    if request.method == 'POST':
+        promocion.nombre = request.form['nombre']
+        promocion.descripcion = request.form['descripcion']
+        promocion.tipo_promocion = request.form['tipo_promocion']
+        promocion.fecha_inicio = datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date()
+        promocion.fecha_fin = datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d').date()
+        promocion.tipo_descuento = request.form['tipo_descuento']
+        promocion.valor_descuento = float(request.form['valor_descuento'])
+        promocion.minimo_personas = int(request.form.get('minimo_personas', 1))
+        promocion.maximo_personas = request.form.get('maximo_personas')
+        promocion.menu_especial = request.form.get('menu_especial', '')
+        promocion.incluye_bebidas = 'incluye_bebidas' in request.form
+        promocion.incluye_postre = 'incluye_postre' in request.form
+        promocion.puntos_extra = int(request.form.get('puntos_extra', 0))
+        promocion.activo = 'activo' in request.form
+        
+        db.session.commit()
+        flash(f'Promoción "{promocion.nombre}" actualizada exitosamente')
+        return redirect(url_for('admin_promociones'))
+    
+    return render_template('editar_promocion.html', promocion=promocion)
+
+@app.route('/admin/promociones/eliminar/<int:promocion_id>')
+@admin_required
+def eliminar_promocion(promocion_id):
+    promocion = PromocionEspecial.query.get_or_404(promocion_id)
+    nombre = promocion.nombre
+    db.session.delete(promocion)
+    db.session.commit()
+    flash(f'Promoción "{nombre}" eliminada exitosamente')
+    return redirect(url_for('admin_promociones'))
+
 # Funciones auxiliares
 def verificar_disponibilidad(fecha, hora, personas):
     # Lógica simple: máximo 50 personas por hora
@@ -345,10 +700,83 @@ def otorgar_puntos_reserva(usuario, reserva):
         db.session.add(transaccion)
         db.session.commit()
 
+def otorgar_puntos_extra(usuario, puntos, descripcion):
+    """Otorga puntos extra por promociones"""
+    transaccion = TransaccionPuntos(
+        usuario_id=usuario.id,
+        tipo='ganancia',
+        puntos=puntos,
+        descripcion=descripcion
+    )
+    db.session.add(transaccion)
+    usuario.puntos += puntos
+    db.session.commit()
+
+def aplicar_promociones(reserva):
+    """Aplica promociones disponibles a una reserva"""
+    from datetime import datetime
+    fecha_reserva = datetime.strptime(reserva.fecha, '%Y-%m-%d').date()
+    promociones_aplicadas = []
+    
+    # Obtener promociones activas y vigentes
+    promociones = PromocionEspecial.query.filter_by(activo=True).filter(
+        PromocionEspecial.fecha_inicio <= fecha_reserva,
+        PromocionEspecial.fecha_fin >= fecha_reserva
+    ).all()
+    
+    for promocion in promociones:
+        # Verificar condiciones de personas
+        if reserva.personas < promocion.minimo_personas:
+            continue
+        if promocion.maximo_personas and reserva.personas > promocion.maximo_personas:
+            continue
+        
+        # Crear registro de promoción aplicada
+        reserva_promocion = ReservaPromocion(
+            reserva_id=reserva.id,
+            promocion_id=promocion.id,
+            descuento_aplicado=promocion.valor_descuento,
+            puntos_extra_otorgados=promocion.puntos_extra
+        )
+        db.session.add(reserva_promocion)
+        promociones_aplicadas.append(promocion)
+    
+    db.session.commit()
+    return promociones_aplicadas
+
+def obtener_promociones_activas():
+    """Obtiene promociones activas para mostrar en el sitio"""
+    from datetime import datetime
+    today = datetime.now().date()
+    
+    promociones = PromocionEspecial.query.filter_by(activo=True).filter(
+        PromocionEspecial.fecha_inicio <= today,
+        PromocionEspecial.fecha_fin >= today
+    ).order_by(PromocionEspecial.fecha_fin.asc()).limit(5).all()
+    
+    return promociones
+
 def get_configuracion():
     try:
         configs = Configuracion.query.all()
-        return {config.clave: config.valor for config in configs}
+        config_dict = {config.clave: config.valor for config in configs}
+        
+        # Determinar el horario según el día actual
+        from datetime import datetime
+        today = datetime.now()
+        is_weekend = today.weekday() >= 5  # 5 = Sábado, 6 = Domingo
+        
+        # Obtener horarios específicos
+        horario_semana = config_dict.get('horario_semana', 'Lunes a Viernes: 12:00 - 22:00')
+        horario_finde = config_dict.get('horario_finde', 'Sábados y Domingos: 12:00 - 23:00')
+        
+        # Asignar el horario correcto según el día
+        if is_weekend:
+            config_dict['horario_actual'] = horario_finde
+        else:
+            config_dict['horario_actual'] = horario_semana
+        
+        return config_dict
     except Exception as e:
         print(f"Error obteniendo configuración: {e}")
         # Configuración por defecto si hay error
@@ -359,7 +787,9 @@ def get_configuracion():
             'instagram_url': 'https://instagram.com/patagoniaarica',
             'telefono': '+56 58 123 4567',
             'direccion': 'Av. Principal 123, Arica, Chile',
-            'horario': 'Lunes a Domingo: 12:00 - 23:00'
+            'horario_semana': 'Lunes a Viernes: 12:00 - 22:00',
+            'horario_finde': 'Sábados y Domingos: 12:00 - 23:00',
+            'horario_actual': 'Lunes a Viernes: 12:00 - 22:00'
         }
 
 def guardar_configuracion(clave, valor):
@@ -523,6 +953,46 @@ def enviar_email_recuperacion(usuario, token):
     except Exception as e:
         print(f"Error enviando email de recuperación: {e}")
         return False
+
+@app.route('/admin/estadisticas')
+@admin_required
+def admin_estadisticas():
+    from datetime import datetime
+    from sqlalchemy import func
+    # Eventos por mes/año
+    eventos_por_mes = db.session.query(
+        func.strftime('%Y-%m', EventoCorporativo.fecha_evento).label('mes'),
+        func.count(EventoCorporativo.id)
+    ).group_by('mes').order_by('mes').all()
+
+    # Ingresos por mes
+    ingresos_por_mes = db.session.query(
+        func.strftime('%Y-%m', EventoCorporativo.fecha_evento).label('mes'),
+        func.sum(EventoCorporativo.precio_final)
+    ).group_by('mes').order_by('mes').all()
+
+    # Distribución de estados
+    estados = db.session.query(
+        EventoCorporativo.estado, func.count(EventoCorporativo.id)
+    ).group_by(EventoCorporativo.estado).all()
+
+    # Ranking de empresas
+    ranking_empresas = db.session.query(
+        EmpresaConvenio.nombre, func.count(EventoCorporativo.id)
+    )\
+    .join(EventoCorporativo, EventoCorporativo.empresa_id == EmpresaConvenio.id)\
+    .group_by(EmpresaConvenio.id)\
+    .order_by(func.count(EventoCorporativo.id).desc())\
+    .limit(5)\
+    .all()
+
+    return render_template(
+        'admin_estadisticas.html',
+        eventos_por_mes=eventos_por_mes,
+        ingresos_por_mes=ingresos_por_mes,
+        estados=estados,
+        ranking_empresas=ranking_empresas
+    )
 
 if __name__ == '__main__':
     with app.app_context():
