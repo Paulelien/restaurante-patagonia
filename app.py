@@ -248,6 +248,13 @@ def reservas():
         db.session.add(reserva)
         db.session.commit()
         
+        # Notificar al administrador por email (y WhatsApp si está configurado)
+        try:
+            from notificaciones import notificar_reserva
+            notificar_reserva(reserva, notificar_cliente=False, notificar_admin=True)
+        except Exception as e:
+            print(f"Error enviando notificación al admin: {e}")
+        
         # Aplicar promociones disponibles
         promociones_aplicadas = aplicar_promociones(reserva)
         
