@@ -324,6 +324,40 @@ def confirmar_reserva(reserva_id):
     
     return redirect(url_for('admin'))
 
+@app.route('/admin/eliminar/<int:reserva_id>')
+@admin_required
+def eliminar_reserva(reserva_id):
+    reserva = Reserva.query.get_or_404(reserva_id)
+    
+    # Solo permitir eliminar reservas pendientes o canceladas
+    if reserva.estado not in ['pendiente', 'cancelada']:
+        flash('Solo se pueden eliminar reservas pendientes o canceladas')
+        return redirect(url_for('admin'))
+    
+    # Eliminar la reserva
+    db.session.delete(reserva)
+    db.session.commit()
+    
+    flash(f'Reserva de {reserva.nombre} eliminada exitosamente')
+    return redirect(url_for('admin'))
+
+@app.route('/admin/cancelar/<int:reserva_id>')
+@admin_required
+def cancelar_reserva(reserva_id):
+    reserva = Reserva.query.get_or_404(reserva_id)
+    
+    # Solo permitir cancelar reservas pendientes o confirmadas
+    if reserva.estado not in ['pendiente', 'confirmada']:
+        flash('Solo se pueden cancelar reservas pendientes o confirmadas')
+        return redirect(url_for('admin'))
+    
+    # Cambiar estado a cancelada
+    reserva.estado = 'cancelada'
+    db.session.commit()
+    
+    flash(f'Reserva de {reserva.nombre} cancelada exitosamente')
+    return redirect(url_for('admin'))
+
 @app.route('/admin/configuracion', methods=['GET', 'POST'])
 @admin_required
 def admin_configuracion():

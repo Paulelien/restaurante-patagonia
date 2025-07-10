@@ -404,11 +404,24 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if reserva.estado == 'pendiente' %}
-                                    <a href="/admin/confirmar/{{ reserva.id }}" class="btn btn-dark btn-sm">Confirmar</a>
-                                    {% else %}
-                                    <span class="text-success">-</span>
-                                    {% endif %}
+                                    <div class="btn-group" role="group">
+                                        {% if reserva.estado == 'pendiente' %}
+                                        <a href="/admin/confirmar/{{ reserva.id }}" class="btn btn-dark btn-sm">Confirmar</a>
+                                        {% endif %}
+                                        {% if reserva.estado in ['pendiente', 'confirmada'] %}
+                                        <a href="/admin/cancelar/{{ reserva.id }}" class="btn btn-warning btn-sm" onclick="return confirm('¿Estás seguro de que quieres cancelar esta reserva?')">
+                                            <i class="fas fa-times"></i> Cancelar
+                                        </a>
+                                        {% endif %}
+                                        {% if reserva.estado in ['pendiente', 'cancelada'] %}
+                                        <a href="/admin/eliminar/{{ reserva.id }}" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta reserva? Esta acción no se puede deshacer.')">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </a>
+                                        {% endif %}
+                                        {% if reserva.estado == 'confirmada' and not reserva.estado in ['pendiente', 'cancelada'] %}
+                                        <span class="text-success">-</span>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
