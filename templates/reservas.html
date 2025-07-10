@@ -290,6 +290,48 @@
             display: none !important;
         }
 
+        /* Responsive para móviles y tablets */
+        @media (max-width: 768px) {
+            /* Navbar buttons responsive */
+            .navbar-buttons-container {
+                gap: 16px !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                padding: 10px 0 !important;
+            }
+            
+            .nav-link-minimal {
+                font-size: 0.85rem !important;
+                letter-spacing: 1px !important;
+                padding: 8px 4px !important;
+                white-space: nowrap !important;
+            }
+            
+            .logout-btn {
+                font-size: 0.8rem !important;
+                padding: 6px 10px !important;
+            }
+        }
+        
+        /* Responsive para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            /* Navbar buttons para pantallas muy pequeñas */
+            .navbar-buttons-container {
+                gap: 12px !important;
+                padding: 8px 0 !important;
+            }
+            
+            .nav-link-minimal {
+                font-size: 0.75rem !important;
+                letter-spacing: 0.5px !important;
+                padding: 6px 3px !important;
+            }
+            
+            .logout-btn {
+                font-size: 0.7rem !important;
+                padding: 5px 8px !important;
+            }
+        }
     </style>
 </head>
 <body>
