@@ -877,19 +877,17 @@ def enviar_email_recuperacion(usuario, token):
     try:
         from config_email import get_email_config
         config = get_email_config()
-        
+        import os
+        BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:5000')
         # Crear mensaje
         msg = MIMEMultipart()
         msg['From'] = config['email']
         msg['To'] = usuario.email
         msg['Subject'] = 'Recuperación de Contraseña - Patagonia Raw Bar'
-        
         # URL de recuperación
-        reset_url = f"http://127.0.0.1:5000/reset_password/{token}"
-        
+        reset_url = f"{BASE_URL}/reset_password/{token}"
         # Determinar el tipo de usuario
         user_type = "administrador" if usuario.is_admin else "cliente"
-        
         # Contenido del email
         html_content = f"""
         <html>
@@ -912,23 +910,18 @@ def enviar_email_recuperacion(usuario, token):
                 <div class="content">
                     <h2>¡Hola {usuario.nombre}!</h2>
                     <p>Has solicitado recuperar tu contraseña de {user_type}.</p>
-                    
                     <p>Haz clic en el siguiente botón para establecer una nueva contraseña:</p>
-                    
                     <a href="{reset_url}" class="btn">🔑 Cambiar Contraseña</a>
-                    
                     <p><strong>Importante:</strong></p>
                     <ul>
                         <li>Este enlace expira en 24 horas</li>
                         <li>Si no solicitaste este cambio, ignora este email</li>
                         <li>Tu nueva contraseña debe tener al menos 6 caracteres</li>
                     </ul>
-                    
                     <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
                     <p style="word-break: break-all; background: #e9ecef; padding: 10px; border-radius: 5px; font-size: 12px;">
                         {reset_url}
                     </p>
-                    
                     <div class="footer">
                         <p>Este es un email automático, por favor no respondas a este mensaje.</p>
                         <p>© 2024 Patagonia Raw Bar - Arica, Chile</p>
@@ -938,18 +931,14 @@ def enviar_email_recuperacion(usuario, token):
         </body>
         </html>
         """
-        
         msg.attach(MIMEText(html_content, 'html'))
-        
         # Enviar email
         server = smtplib.SMTP(config['smtp_server'], config['smtp_port'])
         server.starttls()
         server.login(config['email'], config['password'])
         server.send_message(msg)
         server.quit()
-        
         return True
-        
     except Exception as e:
         print(f"Error enviando email de recuperación: {e}")
         return False
@@ -979,12 +968,13 @@ def admin_estadisticas():
     # Ranking de empresas
     ranking_empresas = db.session.query(
         EmpresaConvenio.nombre, func.count(EventoCorporativo.id)
-    )\
-    .join(EventoCorporativo, EventoCorporativo.empresa_id == EmpresaConvenio.id)\
-    .group_by(EmpresaConvenio.id)\
-    .order_by(func.count(EventoCorporativo.id).desc())\
-    .limit(5)\
-    .all()
+    ).join(
+        EventoCorporativo, EventoCorporativo.empresa_id == EmpresaConvenio.id
+    ).group_by(
+        EmpresaConvenio.id
+    ).order_by(
+        func.count(EventoCorporativo.id).desc()
+    ).limit(5).all()
 
     return render_template(
         'admin_estadisticas.html',
