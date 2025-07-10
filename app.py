@@ -109,7 +109,7 @@ class Reserva(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     nombre = db.Column(db.String(100), nullable=False)
     telefono = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(120))
+    email = db.Column(db.String(120), nullable=False)  # Ahora es obligatorio
     fecha = db.Column(db.String(20), nullable=False)
     hora = db.Column(db.String(10), nullable=False)
     personas = db.Column(db.Integer, nullable=False)
@@ -225,10 +225,15 @@ def reservas():
     if request.method == 'POST':
         nombre = request.form['nombre']
         telefono = request.form['telefono']
-        email = request.form.get('email', '')
+        email = request.form.get('email', '').strip()
         fecha = request.form['fecha']
         hora = request.form['hora']
         personas = int(request.form['personas'])
+        
+        # Validar que el email sea obligatorio
+        if not email:
+            flash('El email es obligatorio para enviar la confirmación de la reserva.')
+            return redirect(url_for('reservas'))
         
         # Verificar disponibilidad
         if not verificar_disponibilidad(fecha, hora, personas):
@@ -843,6 +848,7 @@ def guardar_configuracion(clave, valor):
     db.session.commit()
 
 @app.route('/descargar_db')
+@admin_required
 def descargar_db():
     return send_file(os.path.join(basedir, 'patagonia.db'), as_attachment=True)
 
