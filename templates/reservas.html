@@ -112,55 +112,37 @@
         @media (max-width: 768px) {
             /* Navbar responsive */
             .navbar-brand {
-                font-size: 1.4rem !important;
+                font-size: 1.3rem !important;
             }
             
-            .auth-buttons {
-                flex-direction: column;
-                gap: 8px;
-                width: 100%;
-                margin-top: 10px;
+            .navbar-brand img {
+                height: 35px !important;
+                margin-right: 8px !important;
             }
             
-            .btn-login, .btn-register {
-                width: 100%;
-                justify-content: center;
-                padding: 12px 20px;
-                font-size: 0.9rem;
+            /* Navbar collapse responsive */
+            .navbar-collapse {
+                margin-top: 1rem;
             }
             
-            /* Form responsive */
-            .card {
-                margin: 1rem 0;
-                padding: 1.5rem !important;
+            /* Navbar buttons responsive */
+            .navbar-buttons-container {
+                gap: 16px !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                padding: 10px 0 !important;
             }
             
-            .card h2 {
-                font-size: 1.8rem;
+            .nav-link-minimal {
+                font-size: 0.85rem !important;
+                letter-spacing: 1px !important;
+                padding: 8px 4px !important;
+                white-space: nowrap !important;
             }
             
-            .form-control {
-                font-size: 16px; /* Evita zoom en iOS */
-            }
-            
-            .btn-lg {
-                padding: 15px 20px;
-                font-size: 1.1rem;
-            }
-            
-
-            
-            .nav-separator {
-                display: none !important;
-            }
-            
-            /* Container responsive */
-            .container {
-                padding: 0 15px;
-            }
-            
-            .col-md-7 {
-                padding: 0;
+            .logout-btn {
+                font-size: 0.8rem !important;
+                padding: 6px 10px !important;
             }
         }
         
@@ -177,22 +159,30 @@
         
         /* Responsive para pantallas muy pequeñas */
         @media (max-width: 480px) {
-            .card {
-                padding: 1rem !important;
-                margin: 0.5rem 0;
-            }
-            
-            .card h2 {
-                font-size: 1.5rem;
-            }
-            
-            .btn-lg {
-                padding: 12px 15px;
-                font-size: 1rem;
-            }
-            
             .navbar-brand {
                 font-size: 1.2rem !important;
+            }
+            
+            .navbar-brand img {
+                height: 30px !important;
+                margin-right: 8px !important;
+            }
+            
+            /* Navbar buttons para pantallas muy pequeñas */
+            .navbar-buttons-container {
+                gap: 12px !important;
+                padding: 8px 0 !important;
+            }
+            
+            .nav-link-minimal {
+                font-size: 0.75rem !important;
+                letter-spacing: 0.5px !important;
+                padding: 6px 3px !important;
+            }
+            
+            .logout-btn {
+                font-size: 0.7rem !important;
+                padding: 5px 8px !important;
             }
         }
         .custom-navbar {
@@ -201,6 +191,49 @@
             border: none;
             min-height: 70px;
         }
+        
+        /* Logo styles */
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff !important;
+            text-decoration: none;
+        }
+        
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+        
+        /* Navbar toggler styles */
+        .navbar-toggler {
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        /* Forzar que el botón hamburguesa sea visible en pantallas medianas */
+        @media (max-width: 991px) {
+            .navbar-toggler {
+                display: block !important;
+            }
+            
+            .navbar-collapse {
+                background: rgba(24, 24, 24, 0.95);
+                border-radius: 8px;
+                margin-top: 10px;
+                padding: 15px;
+            }
+        }
+        
+        /* --- Navbar minimalista --- */
         .custom-navbar .navbar-nav .nav-link {
             color: #e0e0e0 !important;
             text-transform: uppercase;
@@ -336,9 +369,21 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+    <nav class="navbar navbar-expand-md navbar-dark custom-navbar">
         <div class="container">
-            <div class="mx-auto w-100 d-flex justify-content-center">
+            <!-- Logo de Patagonia -->
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="{{ url_for('static', filename='patagonia.png') }}" alt="Patagonia" height="40" class="me-2">
+                <span class="fw-bold">PATAGONIA</span>
+            </a>
+            
+            <!-- Botón hamburguesa -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Enlaces de navegación -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
                 <div class="navbar-buttons-container">
                     <a href="/" class="nav-link-minimal {% if request.path == '/' %}active{% endif %}">INICIO</a>
                     <a href="/reservas" class="nav-link-minimal {% if request.path.startswith('/reservas') %}active{% endif %}">RESERVAS</a>
