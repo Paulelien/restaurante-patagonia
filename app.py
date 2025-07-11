@@ -28,6 +28,13 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'patagonia_arica_super_secret_2024')
+
+# Configuración de sesiones para mayor persistencia
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sesión válida por 7 días
+app.config['SESSION_COOKIE_SECURE'] = False  # True en producción con HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 db = SQLAlchemy(app)
 
 # Configuración de Flask-Login
@@ -203,7 +210,8 @@ def login():
         usuario = Usuario.query.filter_by(email=email).first()
         
         if usuario and check_password_hash(usuario.password_hash, password):
-            login_user(usuario)
+            login_user(usuario, remember=True)  # Hacer la sesión permanente
+            session.permanent = True  # Marcar sesión como permanente
             flash(f'¡Bienvenido, {usuario.nombre}!')
             return redirect(url_for('inicio'))
         else:
@@ -304,7 +312,8 @@ def admin_login():
         
         if usuario and check_password_hash(usuario.password_hash, password):
             if usuario.is_admin:
-                login_user(usuario)
+                login_user(usuario, remember=True)  # Hacer la sesión permanente
+                session.permanent = True  # Marcar sesión como permanente
                 flash(f'¡Bienvenido, administrador {usuario.nombre}!')
                 return redirect(url_for('admin'))
             else:
