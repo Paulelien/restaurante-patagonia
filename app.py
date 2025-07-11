@@ -404,7 +404,7 @@ def marcar_admin(usuario_id):
     usuario = Usuario.query.get_or_404(usuario_id)
     usuario.is_admin = True
     db.session.commit()
-    flash(f'Usuario {usuario.nombre} marcado como administrador')
+            flash(f'Usuario {usuario.nombre} marcado como administrador', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/admin/quitar_admin/<int:usuario_id>')
@@ -413,7 +413,7 @@ def quitar_admin(usuario_id):
     usuario = Usuario.query.get_or_404(usuario_id)
     usuario.is_admin = False
     db.session.commit()
-    flash(f'Privilegios de administrador removidos de {usuario.nombre}')
+            flash(f'Privilegios de administrador removidos de {usuario.nombre}', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/admin/setup', methods=['GET', 'POST'])
@@ -451,7 +451,7 @@ def setup_admin():
         db.session.add(admin)
         db.session.commit()
         
-        flash('Administrador creado exitosamente. Ya puedes iniciar sesión.')
+        flash('Administrador creado exitosamente. Ya puedes iniciar sesión.', 'success')
         return redirect(url_for('admin_login'))
     
     return render_template('setup_admin.html')
@@ -483,7 +483,7 @@ def cambiar_password_admin():
         current_user.password_hash = generate_password_hash(password_nueva)
         db.session.commit()
         
-        flash('Contraseña de administrador actualizada exitosamente')
+        flash('Contraseña de administrador actualizada exitosamente', 'success')
         return redirect(url_for('admin'))
     
     return render_template('admin_cambiar_password.html')
@@ -1051,8 +1051,69 @@ def enviar_email_recuperacion(usuario, token):
 @app.route('/admin/estadisticas')
 @admin_required
 def admin_estadisticas():
-    from datetime import datetime
+    from datetime import datetime, timedelta
     from sqlalchemy import func
+    
+    # ===== ESTADÍSTICAS DE USUARIOS =====
+    
+    # Total de usuarios registrados
+    total_usuarios = Usuario.query.count()
+    
+    # Usuarios por mes (últimos 12 meses)
+    usuarios_por_mes = db.session.query(
+        func.strftime('%Y-%m', Usuario.fecha_registro).label('mes'),
+        func.count(Usuario.id)
+    ).filter(
+        Usuario.fecha_registro >= datetime.utcnow() - timedelta(days=365)
+    ).group_by('mes').order_by('mes').all()
+    
+    # Distribución por niveles de fidelización
+    niveles_usuarios = db.session.query(
+        Usuario.nivel, func.count(Usuario.id)
+    ).group_by(Usuario.nivel).all()
+    
+    # Usuarios administradores vs normales
+    tipos_usuarios = db.session.query(
+        func.case((Usuario.is_admin == True, 'Administradores'), else_='Usuarios').label('tipo'),
+        func.count(Usuario.id)
+    ).group_by('tipo').all()
+    
+    # Top 10 usuarios con más puntos
+    top_usuarios_puntos = Usuario.query.order_by(Usuario.puntos.desc()).limit(10).all()
+    
+    # ===== ESTADÍSTICAS DE RESERVAS =====
+    
+    # Total de reservas
+    total_reservas = Reserva.query.count()
+    
+    # Reservas por estado
+    reservas_por_estado = db.session.query(
+        Reserva.estado, func.count(Reserva.id)
+    ).group_by(Reserva.estado).all()
+    
+    # Reservas por mes (últimos 12 meses)
+    reservas_por_mes = db.session.query(
+        func.strftime('%Y-%m', Reserva.fecha_creacion).label('mes'),
+        func.count(Reserva.id)
+    ).filter(
+        Reserva.fecha_creacion >= datetime.utcnow() - timedelta(days=365)
+    ).group_by('mes').order_by('mes').all()
+    
+    # Promedio de personas por reserva
+    promedio_personas = db.session.query(func.avg(Reserva.personas)).scalar() or 0
+    
+    # ===== ESTADÍSTICAS DE FIDELIZACIÓN =====
+    
+    # Total de puntos otorgados
+    total_puntos = db.session.query(func.sum(Usuario.puntos)).scalar() or 0
+    
+    # Transacciones de puntos por tipo
+    transacciones_puntos = db.session.query(
+        TransaccionPuntos.tipo, func.count(TransaccionPuntos.id)
+    ).group_by(TransaccionPuntos.tipo).all()
+    
+    # ===== ESTADÍSTICAS DE EVENTOS CORPORATIVOS =====
+    
     # Eventos por mes/año
     eventos_por_mes = db.session.query(
         func.strftime('%Y-%m', EventoCorporativo.fecha_evento).label('mes'),
@@ -1065,8 +1126,8 @@ def admin_estadisticas():
         func.sum(EventoCorporativo.precio_final)
     ).group_by('mes').order_by('mes').all()
 
-    # Distribución de estados
-    estados = db.session.query(
+    # Distribución de estados de eventos
+    estados_eventos = db.session.query(
         EventoCorporativo.estado, func.count(EventoCorporativo.id)
     ).group_by(EventoCorporativo.estado).all()
 
@@ -1083,9 +1144,24 @@ def admin_estadisticas():
 
     return render_template(
         'admin_estadisticas.html',
+        # Usuarios
+        total_usuarios=total_usuarios,
+        usuarios_por_mes=usuarios_por_mes,
+        niveles_usuarios=niveles_usuarios,
+        tipos_usuarios=tipos_usuarios,
+        top_usuarios_puntos=top_usuarios_puntos,
+        # Reservas
+        total_reservas=total_reservas,
+        reservas_por_estado=reservas_por_estado,
+        reservas_por_mes=reservas_por_mes,
+        promedio_personas=promedio_personas,
+        # Fidelización
+        total_puntos=total_puntos,
+        transacciones_puntos=transacciones_puntos,
+        # Eventos
         eventos_por_mes=eventos_por_mes,
         ingresos_por_mes=ingresos_por_mes,
-        estados=estados,
+        estados_eventos=estados_eventos,
         ranking_empresas=ranking_empresas
     )
 
