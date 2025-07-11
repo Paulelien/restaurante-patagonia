@@ -55,7 +55,7 @@ def admin_required(f):
         # Verificar que el usuario esté autenticado y sea administrador
         if not current_user.is_authenticated or not current_user.is_admin:
             flash('Acceso denegado. Se requieren privilegios de administrador.')
-            return redirect(url_for('login'))
+            return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
     return decorated_function
 
