@@ -404,7 +404,7 @@ def marcar_admin(usuario_id):
     usuario = Usuario.query.get_or_404(usuario_id)
     usuario.is_admin = True
     db.session.commit()
-            flash(f'Usuario {usuario.nombre} marcado como administrador', 'success')
+    flash(f'Usuario {usuario.nombre} marcado como administrador', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/admin/quitar_admin/<int:usuario_id>')
@@ -413,7 +413,7 @@ def quitar_admin(usuario_id):
     usuario = Usuario.query.get_or_404(usuario_id)
     usuario.is_admin = False
     db.session.commit()
-            flash(f'Privilegios de administrador removidos de {usuario.nombre}', 'success')
+    flash(f'Privilegios de administrador removidos de {usuario.nombre}', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/admin/setup', methods=['GET', 'POST'])
