@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Administrador - Patagonia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .custom-navbar {
+            background: #181818 !important;
+            box-shadow: none;
+            border: none;
+            min-height: 70px;
+        }
+        
+        .navbar-buttons-container {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .nav-link-minimal {
+            color: #e0e0e0;
+            background: none;
+            border: none;
+            font-size: 0.97rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-decoration: none;
+            padding: 0 2px;
+            transition: color 0.2s, font-weight 0.2s;
+            position: relative;
+        }
+        .nav-link-minimal.active,
+        .nav-link-minimal:focus,
+        .nav-link-minimal:hover {
+            color: #fff;
+            font-weight: 900;
+        }
+        .nav-link-minimal.active::after {
+            content: '';
+            display: block;
+            margin: 0 auto;
+            width: 60%;
+            border-bottom: 2px solid #fff;
+            margin-top: 2px;
+        }
+        .card {
+            border-radius: 1rem;
+        }
+        .setup-header {
+            background: linear-gradient(135deg, #2d3e50, #34495e);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem 1rem 0 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+        <div class="container">
+            <div class="mx-auto w-100 d-flex justify-content-center">
+                <div class="navbar-buttons-container">
+                    <a href="/" class="nav-link-minimal">INICIO</a>
+                    <a href="/reservas" class="nav-link-minimal">RESERVAS</a>
+                    <a href="/login" class="nav-link-minimal">INICIAR SESIÓN</a>
+                    <a href="/registro" class="nav-link-minimal">REGISTRARSE</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="setup-header">
+                        <h2 class="mb-2">🔧 Configuración Inicial</h2>
+                        <p class="mb-0">Crear el primer administrador del sistema</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info">
+                            <strong>Importante:</strong> Esta es la configuración inicial del sistema. 
+                            Solo se puede crear un administrador una vez.
+                        </div>
+                        
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-danger">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="post">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre Completo</label>
+                                <input type="text" name="nombre" class="form-control" required placeholder="Tu nombre completo">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" required placeholder="tu-email@ejemplo.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Contraseña</label>
+                                <input type="password" name="password" class="form-control" required placeholder="Contraseña segura">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Confirmar Contraseña</label>
+                                <input type="password" name="password_confirmar" class="form-control" required placeholder="Repite la contraseña">
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-dark btn-lg">Crear Administrador</button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <a href="/admin/login" class="text-muted">¿Ya tienes un administrador? Inicia sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

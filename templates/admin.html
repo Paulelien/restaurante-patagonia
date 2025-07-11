@@ -178,9 +178,16 @@
             <div class="col-md-4 text-end">
                 <div class="dropdown">
                     <button class="btn btn-outline-dark dropdown-toggle" type="button" id="adminMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-cog me-1"></i>Administración
+                        <i class="fas fa-user me-1"></i>{{ current_user.nombre }}
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="adminMenu">
+                        <li><div class="dropdown-header">
+                            <i class="fas fa-user-shield me-2"></i>Administrador
+                        </div></li>
+                        <li><div class="dropdown-item-text text-muted">
+                            <small>{{ current_user.email }}</small>
+                        </div></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/admin/configuracion">
                             <i class="fas fa-cogs me-2"></i>Configuración
                         </a></li>
@@ -430,8 +437,8 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        {% if reserva.estado == 'pendiente' %}
-                                        <a href="/admin/confirmar/{{ reserva.id }}" class="btn btn-dark btn-sm">Confirmar</a>
+                                    {% if reserva.estado == 'pendiente' %}
+                                    <a href="/admin/confirmar/{{ reserva.id }}" class="btn btn-dark btn-sm">Confirmar</a>
                                         {% endif %}
                                         {% if reserva.estado in ['pendiente', 'confirmada'] %}
                                         <a href="/admin/cancelar/{{ reserva.id }}" class="btn btn-warning btn-sm" onclick="return confirm('¿Estás seguro de que quieres cancelar esta reserva?')">
@@ -444,8 +451,8 @@
                                         </a>
                                         {% endif %}
                                         {% if reserva.estado == 'confirmada' and not reserva.estado in ['pendiente', 'cancelada'] %}
-                                        <span class="text-success">-</span>
-                                        {% endif %}
+                                    <span class="text-success">-</span>
+                                    {% endif %}
                                     </div>
                                 </td>
                             </tr>

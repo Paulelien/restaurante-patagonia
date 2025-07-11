@@ -461,9 +461,10 @@
                                    value="{{ current_user.nombre if current_user.is_authenticated else '' }}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="Tu email (opcional)" 
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" required placeholder="Tu email (necesario para confirmación)" 
                                    value="{{ current_user.email if current_user.is_authenticated else '' }}">
+                            <small class="text-muted">Necesitamos tu email para enviarte la confirmación de la reserva</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Teléfono</label>

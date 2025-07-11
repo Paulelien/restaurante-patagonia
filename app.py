@@ -35,7 +35,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-ADMIN_PASSWORD = 'admin123'
+# Eliminamos la contraseña global de admin
+# ADMIN_PASSWORD = 'admin123'  # Ya no se usa
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -44,8 +45,10 @@ def load_user(user_id):
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not request.cookies.get('admin_logged_in'):
-            return redirect(url_for('admin_login'))
+        # Verificar que el usuario esté autenticado y sea administrador
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Acceso denegado. Se requieren privilegios de administrador.')
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -286,14 +289,30 @@ def reservas():
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
+    # Verificar si existe algún administrador
+    admin_existente = Usuario.query.filter_by(is_admin=True).first()
+    if not admin_existente:
+        # Si no hay administradores, redirigir a la configuración inicial
+        return redirect(url_for('setup_admin'))
+    
     if request.method == 'POST':
+        email = request.form['email']
         password = request.form['password']
-        if password == ADMIN_PASSWORD:
-            resp = redirect(url_for('admin'))
-            resp.set_cookie('admin_logged_in', 'true')
-            return resp
+        
+        # Buscar usuario por email
+        usuario = Usuario.query.filter_by(email=email).first()
+        
+        if usuario and check_password_hash(usuario.password_hash, password):
+            if usuario.is_admin:
+                login_user(usuario)
+                flash(f'¡Bienvenido, administrador {usuario.nombre}!')
+                return redirect(url_for('admin'))
+            else:
+                flash('Acceso denegado. No tienes privilegios de administrador.')
+                return redirect(url_for('admin_login'))
         else:
-            flash('Contraseña incorrecta')
+            flash('Email o contraseña incorrectos')
+    
     return render_template('admin_login.html')
 
 @app.route('/admin')
@@ -397,18 +416,56 @@ def quitar_admin(usuario_id):
     flash(f'Privilegios de administrador removidos de {usuario.nombre}')
     return redirect(url_for('admin'))
 
+@app.route('/admin/setup', methods=['GET', 'POST'])
+def setup_admin():
+    """Ruta para crear el primer administrador del sistema"""
+    # Verificar si ya existe algún administrador
+    admin_existente = Usuario.query.filter_by(is_admin=True).first()
+    if admin_existente:
+        flash('Ya existe un administrador en el sistema')
+        return redirect(url_for('admin_login'))
+    
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        password_confirmar = request.form['password_confirmar']
+        nombre = request.form['nombre']
+        
+        # Verificar que las contraseñas coincidan
+        if password != password_confirmar:
+            flash('Las contraseñas no coinciden')
+            return redirect(url_for('setup_admin'))
+        
+        # Verificar que el email no esté en uso
+        if Usuario.query.filter_by(email=email).first():
+            flash('Este email ya está registrado')
+            return redirect(url_for('setup_admin'))
+        
+        # Crear el administrador
+        admin = Usuario(
+            email=email,
+            password_hash=generate_password_hash(password),
+            nombre=nombre,
+            is_admin=True
+        )
+        db.session.add(admin)
+        db.session.commit()
+        
+        flash('Administrador creado exitosamente. Ya puedes iniciar sesión.')
+        return redirect(url_for('admin_login'))
+    
+    return render_template('setup_admin.html')
+
 @app.route('/admin/cambiar_password', methods=['GET', 'POST'])
 @admin_required
 def cambiar_password_admin():
-    global ADMIN_PASSWORD
-    
     if request.method == 'POST':
         password_actual = request.form['password_actual']
         password_nueva = request.form['password_nueva']
         password_confirmar = request.form['password_confirmar']
         
-        # Verificar contraseña actual
-        if password_actual != ADMIN_PASSWORD:
+        # Verificar contraseña actual del usuario administrador
+        if not check_password_hash(current_user.password_hash, password_actual):
             flash('Contraseña actual incorrecta')
             return redirect(url_for('cambiar_password_admin'))
         
@@ -422,8 +479,9 @@ def cambiar_password_admin():
             flash('La contraseña nueva no puede estar vacía')
             return redirect(url_for('cambiar_password_admin'))
         
-        # Cambiar la contraseña global
-        ADMIN_PASSWORD = password_nueva
+        # Cambiar la contraseña del usuario administrador actual
+        current_user.password_hash = generate_password_hash(password_nueva)
+        db.session.commit()
         
         flash('Contraseña de administrador actualizada exitosamente')
         return redirect(url_for('admin'))
