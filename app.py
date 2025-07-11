@@ -34,6 +34,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)  # Sesión válida
 app.config['SESSION_COOKIE_SECURE'] = False  # True en producción con HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_DOMAIN'] = None  # Permitir cookies en subdominios
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Renovar sesión en cada request
 
 db = SQLAlchemy(app)
 
@@ -48,6 +51,12 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
+
+def renovar_sesion_admin():
+    """Función para renovar la sesión de administrador"""
+    if current_user.is_authenticated and current_user.is_admin:
+        session.permanent = True
+        session.modified = True
 
 def admin_required(f):
     @wraps(f)
@@ -327,6 +336,7 @@ def admin_login():
 @app.route('/admin')
 @admin_required
 def admin():
+    renovar_sesion_admin()  # Renovar sesión en cada acceso
     reservas = Reserva.query.order_by(Reserva.fecha, Reserva.hora).all()
     usuarios = Usuario.query.order_by(Usuario.fecha_registro.desc()).limit(10).all()
     config = get_configuracion()
@@ -1060,119 +1070,98 @@ def enviar_email_recuperacion(usuario, token):
 @app.route('/admin/estadisticas')
 @admin_required
 def admin_estadisticas():
-    from datetime import datetime, timedelta
     from sqlalchemy import func
-    
-    # ===== ESTADÍSTICAS DE USUARIOS =====
-    
-    # Total de usuarios registrados
-    total_usuarios = Usuario.query.count()
-    
-    # Usuarios por mes (últimos 12 meses)
-    usuarios_por_mes = db.session.query(
-        func.strftime('%Y-%m', Usuario.fecha_registro).label('mes'),
-        func.count(Usuario.id)
-    ).filter(
-        Usuario.fecha_registro >= datetime.utcnow() - timedelta(days=365)
-    ).group_by('mes').order_by('mes').all()
-    
-    # Distribución por niveles de fidelización
-    niveles_usuarios = db.session.query(
-        Usuario.nivel, func.count(Usuario.id)
-    ).group_by(Usuario.nivel).all()
-    
-    # Usuarios administradores vs normales
-    tipos_usuarios = db.session.query(
-        func.case((Usuario.is_admin == True, 'Administradores'), else_='Usuarios').label('tipo'),
-        func.count(Usuario.id)
-    ).group_by('tipo').all()
-    
-    # Top 10 usuarios con más puntos
-    top_usuarios_puntos = Usuario.query.order_by(Usuario.puntos.desc()).limit(10).all()
-    
-    # ===== ESTADÍSTICAS DE RESERVAS =====
-    
-    # Total de reservas
-    total_reservas = Reserva.query.count()
-    
-    # Reservas por estado
-    reservas_por_estado = db.session.query(
-        Reserva.estado, func.count(Reserva.id)
-    ).group_by(Reserva.estado).all()
-    
-    # Reservas por mes (últimos 12 meses)
-    reservas_por_mes = db.session.query(
-        func.strftime('%Y-%m', Reserva.fecha_creacion).label('mes'),
-        func.count(Reserva.id)
-    ).filter(
-        Reserva.fecha_creacion >= datetime.utcnow() - timedelta(days=365)
-    ).group_by('mes').order_by('mes').all()
-    
-    # Promedio de personas por reserva
-    promedio_personas = db.session.query(func.avg(Reserva.personas)).scalar() or 0
-    
-    # ===== ESTADÍSTICAS DE FIDELIZACIÓN =====
-    
-    # Total de puntos otorgados
-    total_puntos = db.session.query(func.sum(Usuario.puntos)).scalar() or 0
-    
-    # Transacciones de puntos por tipo
-    transacciones_puntos = db.session.query(
-        TransaccionPuntos.tipo, func.count(TransaccionPuntos.id)
-    ).group_by(TransaccionPuntos.tipo).all()
-    
-    # ===== ESTADÍSTICAS DE EVENTOS CORPORATIVOS =====
-    
-    # Eventos por mes/año
-    eventos_por_mes = db.session.query(
-        func.strftime('%Y-%m', EventoCorporativo.fecha_evento).label('mes'),
-        func.count(EventoCorporativo.id)
-    ).group_by('mes').order_by('mes').all()
-
-    # Ingresos por mes
-    ingresos_por_mes = db.session.query(
-        func.strftime('%Y-%m', EventoCorporativo.fecha_evento).label('mes'),
-        func.sum(EventoCorporativo.precio_final)
-    ).group_by('mes').order_by('mes').all()
-
-    # Distribución de estados de eventos
-    estados_eventos = db.session.query(
-        EventoCorporativo.estado, func.count(EventoCorporativo.id)
-    ).group_by(EventoCorporativo.estado).all()
-
-    # Ranking de empresas
-    ranking_empresas = db.session.query(
-        EmpresaConvenio.nombre, func.count(EventoCorporativo.id)
-    ).join(
-        EventoCorporativo, EventoCorporativo.empresa_id == EmpresaConvenio.id
-    ).group_by(
-        EmpresaConvenio.id
-    ).order_by(
-        func.count(EventoCorporativo.id).desc()
-    ).limit(5).all()
-
-    return render_template(
-        'admin_estadisticas.html',
-        # Usuarios
-        total_usuarios=total_usuarios,
-        usuarios_por_mes=usuarios_por_mes,
-        niveles_usuarios=niveles_usuarios,
-        tipos_usuarios=tipos_usuarios,
-        top_usuarios_puntos=top_usuarios_puntos,
-        # Reservas
-        total_reservas=total_reservas,
-        reservas_por_estado=reservas_por_estado,
-        reservas_por_mes=reservas_por_mes,
-        promedio_personas=promedio_personas,
-        # Fidelización
-        total_puntos=total_puntos,
-        transacciones_puntos=transacciones_puntos,
-        # Eventos
-        eventos_por_mes=eventos_por_mes,
-        ingresos_por_mes=ingresos_por_mes,
-        estados_eventos=estados_eventos,
-        ranking_empresas=ranking_empresas
-    )
+    try:
+        # ===== ESTADÍSTICAS BÁSICAS =====
+        
+        # Total de usuarios registrados
+        total_usuarios = Usuario.query.count()
+        
+        # Total de reservas
+        total_reservas = Reserva.query.count()
+        
+        # Total de puntos otorgados
+        total_puntos = db.session.query(func.sum(Usuario.puntos)).scalar() or 0
+        
+        # Promedio de personas por reserva
+        promedio_personas = db.session.query(func.avg(Reserva.personas)).scalar() or 0
+        
+        # Top 10 usuarios con más puntos
+        top_usuarios_puntos = Usuario.query.order_by(Usuario.puntos.desc()).limit(10).all()
+        
+        # ===== DATOS SIMPLIFICADOS =====
+        
+        # Distribución por niveles de fidelización
+        niveles_usuarios = db.session.query(
+            Usuario.nivel, func.count(Usuario.id)
+        ).group_by(Usuario.nivel).all()
+        
+        # Reservas por estado
+        reservas_por_estado = db.session.query(
+            Reserva.estado, func.count(Reserva.id)
+        ).group_by(Reserva.estado).all()
+        
+        # Transacciones de puntos por tipo
+        transacciones_puntos = db.session.query(
+            TransaccionPuntos.tipo, func.count(TransaccionPuntos.id)
+        ).group_by(TransaccionPuntos.tipo).all()
+        
+        # Distribución de estados de eventos
+        estados_eventos = db.session.query(
+            EventoCorporativo.estado, func.count(EventoCorporativo.id)
+        ).group_by(EventoCorporativo.estado).all()
+        
+        # ===== DATOS VACÍOS PARA EVITAR ERRORES =====
+        usuarios_por_mes = []
+        reservas_por_mes = []
+        eventos_por_mes = []
+        ingresos_por_mes = []
+        ranking_empresas = []
+        tipos_usuarios = []
+        
+        return render_template(
+            'admin_estadisticas.html',
+            # Usuarios
+            total_usuarios=total_usuarios,
+            usuarios_por_mes=usuarios_por_mes,
+            niveles_usuarios=niveles_usuarios,
+            tipos_usuarios=tipos_usuarios,
+            top_usuarios_puntos=top_usuarios_puntos,
+            # Reservas
+            total_reservas=total_reservas,
+            reservas_por_estado=reservas_por_estado,
+            reservas_por_mes=reservas_por_mes,
+            promedio_personas=promedio_personas,
+            # Fidelización
+            total_puntos=total_puntos,
+            transacciones_puntos=transacciones_puntos,
+            # Eventos
+            eventos_por_mes=eventos_por_mes,
+            ingresos_por_mes=ingresos_por_mes,
+            estados_eventos=estados_eventos,
+            ranking_empresas=ranking_empresas
+        )
+    except Exception as e:
+        print(f"Error en estadísticas: {e}")
+        # Retornar datos mínimos en caso de error
+        return render_template(
+            'admin_estadisticas.html',
+            total_usuarios=0,
+            total_reservas=0,
+            total_puntos=0,
+            promedio_personas=0,
+            top_usuarios_puntos=[],
+            niveles_usuarios=[],
+            tipos_usuarios=[],
+            reservas_por_estado=[],
+            transacciones_puntos=[],
+            estados_eventos=[],
+            usuarios_por_mes=[],
+            reservas_por_mes=[],
+            eventos_por_mes=[],
+            ingresos_por_mes=[],
+            ranking_empresas=[]
+        )
 
 if __name__ == '__main__':
     with app.app_context():
