@@ -30,7 +30,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'patagonia_arica_super_secret_2024')
 
 # Configuración de sesiones para mayor persistencia
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sesión válida por 7 días
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)  # Sesión válida por 8 horas (jornada laboral)
 app.config['SESSION_COOKIE_SECURE'] = False  # True en producción con HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
