@@ -557,6 +557,34 @@
         .logout-btn::after {
             display: none !important;
         }
+        
+        /* Estilos para el enlace de panel admin */
+        .nav-link-minimal[href="/admin"] {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333 !important;
+            border-radius: 20px;
+            padding: 8px 16px !important;
+            font-weight: 700 !important;
+            text-shadow: none;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link-minimal[href="/admin"]:hover {
+            background: linear-gradient(45deg, #ffed4e, #ffd700);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+            color: #333 !important;
+        }
+        
+        .nav-link-minimal[href="/admin"].active {
+            background: linear-gradient(45deg, #ffed4e, #ffd700);
+            color: #333 !important;
+        }
+        
+        .nav-link-minimal[href="/admin"].active::after {
+            display: none;
+        }
         /* --- Fin navbar minimalista --- */
     </style>
 </head>
@@ -572,14 +600,16 @@
                     {% if current_user.is_authenticated %}
                         <a href="/perfil" class="nav-link-minimal {% if request.path.startswith('/perfil') %}active{% endif %}">MI PERFIL</a>
                         {% if current_user.is_admin %}
-                        <a href="/admin/login" class="nav-link-minimal {% if request.path.startswith('/admin') %}active{% endif %}">ADMINISTRADOR</a>
+                        <a href="/admin" class="nav-link-minimal {% if request.path.startswith('/admin') %}active{% endif %}" style="color: #ffd700; font-weight: bold;">PANEL ADMIN</a>
                         {% endif %}
                         <a href="/logout" class="nav-link-minimal logout-btn">CERRAR SESIÓN</a>
                     {% else %}
                         <a href="/login" class="nav-link-minimal {% if request.path.startswith('/login') %}active{% endif %}">INICIAR SESIÓN</a>
                         <a href="/registro" class="nav-link-minimal {% if request.path.startswith('/registro') %}active{% endif %}">REGISTRARSE</a>
                     {% endif %}
+                    {% if not current_user.is_authenticated %}
                     <a href="/admin/login" class="nav-link-minimal" style="color: orange; font-weight: bold;">ADMIN</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

@@ -304,7 +304,7 @@
                     {% if current_user.is_authenticated %}
                         <a href="/perfil" class="nav-link-minimal">MI PERFIL</a>
                         {% if current_user.is_admin %}
-                        <a href="/admin/login" class="nav-link-minimal">ADMINISTRADOR</a>
+                        <a href="/admin" class="nav-link-minimal" style="color: #ffd700; font-weight: bold;">PANEL ADMIN</a>
                         {% endif %}
                         <a href="/logout" class="nav-link-minimal logout-btn">CERRAR SESIÓN</a>
                     {% else %}
