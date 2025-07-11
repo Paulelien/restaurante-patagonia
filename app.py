@@ -807,11 +807,26 @@ def verificar_disponibilidad(fecha, hora, personas):
     total_personas = sum(r.personas for r in reservas_existentes)
     return (total_personas + personas) <= 50
 
+def actualizar_nivel_usuario(usuario):
+    """Actualiza el nivel del usuario según sus puntos"""
+    if usuario.puntos >= 600:
+        usuario.nivel = 'Diamante'
+    elif usuario.puntos >= 300:
+        usuario.nivel = 'Oro'
+    elif usuario.puntos >= 100:
+        usuario.nivel = 'Plata'
+    else:
+        usuario.nivel = 'Bronce'
+    db.session.commit()
+
 def otorgar_puntos_reserva(usuario, reserva):
     if not reserva.puntos_otorgados:
         puntos = reserva.personas * 10  # 10 puntos por persona
         usuario.puntos += puntos
         reserva.puntos_otorgados = True
+        
+        # Actualizar nivel del usuario
+        actualizar_nivel_usuario(usuario)
         
         # Crear transacción
         transaccion = TransaccionPuntos(
