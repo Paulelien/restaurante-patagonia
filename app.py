@@ -966,29 +966,144 @@ def nueva_promocion():
 @app.route('/admin/promociones/editar/<int:promocion_id>', methods=['GET', 'POST'])
 @admin_required
 def editar_promocion(promocion_id):
-    promocion = PromocionEspecial.query.get_or_404(promocion_id)
-    
-    if request.method == 'POST':
-        promocion.nombre = request.form['nombre']
-        promocion.descripcion = request.form['descripcion']
-        promocion.tipo_promocion = request.form['tipo_promocion']
-        promocion.fecha_inicio = datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date()
-        promocion.fecha_fin = datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d').date()
-        promocion.tipo_descuento = request.form['tipo_descuento']
-        promocion.valor_descuento = float(request.form['valor_descuento'])
-        promocion.minimo_personas = int(request.form.get('minimo_personas', 1))
-        promocion.maximo_personas = request.form.get('maximo_personas')
-        promocion.menu_especial = request.form.get('menu_especial', '')
-        promocion.incluye_bebidas = 'incluye_bebidas' in request.form
-        promocion.incluye_postre = 'incluye_postre' in request.form
-        promocion.puntos_extra = int(request.form.get('puntos_extra', 0))
-        promocion.activo = 'activo' in request.form
+    try:
+        promocion = PromocionEspecial.query.get_or_404(promocion_id)
         
-        db.session.commit()
-        flash(f'Promoción "{promocion.nombre}" actualizada exitosamente')
+        if request.method == 'POST':
+            print(f"DEBUG: Editando promoción ID: {promocion_id}")
+            
+            # Validar campos obligatorios
+            if not request.form.get('nombre'):
+                flash('El nombre de la promoción es obligatorio')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            if not request.form.get('descripcion'):
+                flash('La descripción de la promoción es obligatoria')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            if not request.form.get('fecha_inicio') or not request.form.get('fecha_fin'):
+                flash('Las fechas de inicio y fin son obligatorias')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            # Obtener y validar datos del formulario
+            nombre = request.form['nombre'].strip()
+            descripcion = request.form['descripcion'].strip()
+            tipo_promocion = request.form.get('tipo_promocion', 'festivo')
+            tipo_descuento = request.form.get('tipo_descuento', 'porcentaje')
+            
+            # Validar y convertir fechas
+            try:
+                fecha_inicio = datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date()
+                fecha_fin = datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d').date()
+                
+                if fecha_inicio > fecha_fin:
+                    flash('La fecha de inicio no puede ser posterior a la fecha de fin')
+                    return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            except ValueError as e:
+                print(f"DEBUG: Error con fechas: {e}")
+                flash('Formato de fecha inválido')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            # Validar y convertir valor_descuento
+            try:
+                valor_descuento = float(request.form.get('valor_descuento', 0))
+                if valor_descuento < 0:
+                    flash('El valor del descuento no puede ser negativo')
+                    return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            except ValueError as e:
+                print(f"DEBUG: Error con valor_descuento: {e}")
+                flash('Valor de descuento inválido')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            # Validar y convertir minimo_personas
+            try:
+                minimo_personas = int(request.form.get('minimo_personas', 1))
+                if minimo_personas <= 0:
+                    flash('El mínimo de personas debe ser mayor a 0')
+                    return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            except ValueError as e:
+                print(f"DEBUG: Error con minimo_personas: {e}")
+                flash('Número mínimo de personas inválido')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            # Validar y convertir maximo_personas
+            maximo_personas = request.form.get('maximo_personas')
+            if maximo_personas and maximo_personas.strip():
+                try:
+                    maximo_personas = int(maximo_personas)
+                    if maximo_personas <= 0:
+                        flash('El máximo de personas debe ser mayor a 0')
+                        return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+                    if maximo_personas < minimo_personas:
+                        flash('El máximo de personas no puede ser menor al mínimo')
+                        return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+                except ValueError:
+                    maximo_personas = None
+            else:
+                maximo_personas = None
+            
+            # Validar y convertir puntos_extra
+            try:
+                puntos_extra = int(request.form.get('puntos_extra', 0))
+                if puntos_extra < 0:
+                    flash('Los puntos extra no pueden ser negativos')
+                    return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            except ValueError as e:
+                print(f"DEBUG: Error con puntos_extra: {e}")
+                flash('Puntos extra inválidos')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+            
+            # Obtener otros campos
+            menu_especial = request.form.get('menu_especial', '').strip()
+            incluye_bebidas = 'incluye_bebidas' in request.form
+            incluye_postre = 'incluye_postre' in request.form
+            activo = 'activo' in request.form
+            
+            print(f"DEBUG: Datos validados correctamente")
+            
+            # Actualizar la promoción
+            try:
+                promocion.nombre = nombre
+                promocion.descripcion = descripcion
+                promocion.tipo_promocion = tipo_promocion
+                promocion.fecha_inicio = fecha_inicio
+                promocion.fecha_fin = fecha_fin
+                promocion.tipo_descuento = tipo_descuento
+                promocion.valor_descuento = valor_descuento
+                promocion.minimo_personas = minimo_personas
+                promocion.maximo_personas = maximo_personas
+                promocion.menu_especial = menu_especial
+                promocion.incluye_bebidas = incluye_bebidas
+                promocion.incluye_postre = incluye_postre
+                promocion.puntos_extra = puntos_extra
+                promocion.activo = activo
+                
+                print(f"DEBUG: Promoción actualizada en memoria")
+                
+                db.session.commit()
+                print(f"DEBUG: Promoción guardada en base de datos")
+                flash(f'Promoción "{promocion.nombre}" actualizada exitosamente')
+                return redirect(url_for('admin_promociones'))
+            except Exception as db_error:
+                print(f"ERROR en base de datos al actualizar promoción: {db_error}")
+                print(f"Tipo de error DB: {type(db_error)}")
+                import traceback
+                print(f"Traceback DB: {traceback.format_exc()}")
+                db.session.rollback()
+                flash('Error al guardar los cambios. Intenta nuevamente.')
+                return redirect(url_for('editar_promocion', promocion_id=promocion_id))
+        
+        # GET request - mostrar formulario
+        print(f"DEBUG: Mostrando formulario de edición para promoción ID: {promocion_id}")
+        return render_template('editar_promocion.html', promocion=promocion)
+        
+    except Exception as e:
+        print(f"ERROR en editar_promocion: {e}")
+        print(f"Tipo de error: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        flash('Error inesperado al editar la promoción. Intenta nuevamente.')
         return redirect(url_for('admin_promociones'))
-    
-    return render_template('editar_promocion.html', promocion=promocion)
 
 @app.route('/admin/promociones/eliminar/<int:promocion_id>')
 @admin_required
