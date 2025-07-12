@@ -633,31 +633,37 @@ def nueva_empresa():
 @app.route('/admin/empresas/editar/<int:empresa_id>', methods=['GET', 'POST'])
 @admin_required
 def editar_empresa(empresa_id):
-    empresa = EmpresaConvenio.query.get_or_404(empresa_id)
-    
-    if request.method == 'POST':
-        empresa.nombre = request.form['nombre']
-        empresa.email_contacto = request.form['email_contacto']
-        empresa.telefono_contacto = request.form['telefono_contacto']
-        empresa.nombre_contacto = request.form['nombre_contacto']
-        empresa.direccion = request.form.get('direccion', '')
-        empresa.numero_empleados = int(request.form.get('numero_empleados', 0))
-        empresa.descuento_porcentaje = int(request.form.get('descuento_porcentaje', 10))
-        empresa.observaciones = request.form.get('observaciones', '')
+    try:
+        empresa = EmpresaConvenio.query.get_or_404(empresa_id)
         
-        fecha_vencimiento = request.form.get('fecha_vencimiento')
-        if fecha_vencimiento:
-            try:
-                empresa.fecha_vencimiento = datetime.strptime(fecha_vencimiento, '%Y-%m-%d')
-            except ValueError:
-                flash('Formato de fecha inválido')
-                return redirect(url_for('editar_empresa', empresa_id=empresa_id))
+        if request.method == 'POST':
+            empresa.nombre = request.form['nombre']
+            empresa.email_contacto = request.form['email_contacto']
+            empresa.telefono_contacto = request.form['telefono_contacto']
+            empresa.nombre_contacto = request.form['nombre_contacto']
+            empresa.direccion = request.form.get('direccion', '')
+            empresa.numero_empleados = int(request.form.get('numero_empleados', 0))
+            empresa.descuento_porcentaje = int(request.form.get('descuento_porcentaje', 10))
+            empresa.estado = request.form.get('estado', 'activo')
+            empresa.observaciones = request.form.get('observaciones', '')
+            
+            fecha_vencimiento = request.form.get('fecha_vencimiento')
+            if fecha_vencimiento:
+                try:
+                    empresa.fecha_vencimiento = datetime.strptime(fecha_vencimiento, '%Y-%m-%d')
+                except ValueError:
+                    flash('Formato de fecha inválido')
+                    return redirect(url_for('editar_empresa', empresa_id=empresa_id))
+            
+            db.session.commit()
+            flash(f'Empresa {empresa.nombre} actualizada exitosamente')
+            return redirect(url_for('admin_empresas'))
         
-        db.session.commit()
-        flash(f'Empresa {empresa.nombre} actualizada exitosamente')
+        return render_template('editar_empresa.html', empresa=empresa)
+    except Exception as e:
+        print(f"ERROR en editar_empresa: {e}")
+        flash('Error al editar la empresa. Intenta nuevamente.')
         return redirect(url_for('admin_empresas'))
-    
-    return render_template('editar_empresa.html', empresa=empresa)
 
 @app.route('/admin/eventos')
 @admin_required
