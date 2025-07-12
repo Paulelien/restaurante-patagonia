@@ -308,14 +308,18 @@ def reservas():
 def admin_login():
     # Verificar si existe algún administrador
     try:
+        print("DEBUG: Verificando administradores en la base de datos...")
         admin_existente = Usuario.query.filter_by(is_admin=True).first()
         print(f"DEBUG: Admin encontrado: {admin_existente}")
-        if not admin_existente:
+        if admin_existente:
+            print(f"DEBUG: Admin encontrado - ID: {admin_existente.id}, Email: {admin_existente.email}, Nombre: {admin_existente.nombre}")
+        else:
             print("DEBUG: No se encontró admin, redirigiendo a setup")
             # Si no hay administradores, redirigir a la configuración inicial
             return redirect(url_for('setup_admin'))
     except Exception as e:
         print(f"DEBUG: Error verificando admin: {e}")
+        print(f"DEBUG: Tipo de error: {type(e)}")
         # En caso de error, permitir acceso al login
         pass
     
@@ -323,19 +327,29 @@ def admin_login():
         email = request.form['email']
         password = request.form['password']
         
+        print(f"DEBUG: Intento de login admin - Email: {email}")
+        
         # Buscar usuario por email
         usuario = Usuario.query.filter_by(email=email).first()
         
-        if usuario and check_password_hash(usuario.password_hash, password):
-            if usuario.is_admin:
-                login_user(usuario, remember=True)  # Hacer la sesión permanente
-                session.permanent = True  # Marcar sesión como permanente
-                flash(f'¡Bienvenido, administrador {usuario.nombre}!')
-                return redirect(url_for('admin'))
+        if usuario:
+            print(f"DEBUG: Usuario encontrado - ID: {usuario.id}, Is Admin: {usuario.is_admin}")
+            if check_password_hash(usuario.password_hash, password):
+                if usuario.is_admin:
+                    login_user(usuario, remember=True)  # Hacer la sesión permanente
+                    session.permanent = True  # Marcar sesión como permanente
+                    print(f"DEBUG: Login exitoso para admin: {usuario.nombre}")
+                    flash(f'¡Bienvenido, administrador {usuario.nombre}!')
+                    return redirect(url_for('admin'))
+                else:
+                    print(f"DEBUG: Usuario no es admin - Is Admin: {usuario.is_admin}")
+                    flash('Acceso denegado. No tienes privilegios de administrador.')
+                    return redirect(url_for('admin_login'))
             else:
-                flash('Acceso denegado. No tienes privilegios de administrador.')
-                return redirect(url_for('admin_login'))
+                print("DEBUG: Contraseña incorrecta")
+                flash('Email o contraseña incorrectos')
         else:
+            print(f"DEBUG: Usuario no encontrado con email: {email}")
             flash('Email o contraseña incorrectos')
     
     return render_template('admin_login.html')
@@ -445,17 +459,31 @@ def quitar_admin(usuario_id):
 @app.route('/admin/setup', methods=['GET', 'POST'])
 def setup_admin():
     """Ruta para crear el primer administrador del sistema"""
+    print("DEBUG SETUP: Iniciando setup de administrador")
+    
     # Verificar si ya existe algún administrador
-    admin_existente = Usuario.query.filter_by(is_admin=True).first()
-    if admin_existente:
-        flash('Ya existe un administrador en el sistema')
-        return redirect(url_for('admin_login'))
+    try:
+        print("DEBUG SETUP: Verificando si existe admin...")
+        admin_existente = Usuario.query.filter_by(is_admin=True).first()
+        print(f"DEBUG SETUP: Admin existente: {admin_existente}")
+        if admin_existente:
+            print(f"DEBUG SETUP: Admin ya existe - ID: {admin_existente.id}, Email: {admin_existente.email}")
+            flash('Ya existe un administrador en el sistema')
+            return redirect(url_for('admin_login'))
+        else:
+            print("DEBUG SETUP: No existe admin, continuando con setup")
+    except Exception as e:
+        print(f"DEBUG SETUP: Error verificando admin: {e}")
+        print(f"DEBUG SETUP: Tipo de error: {type(e)}")
+        # Continuar con el setup en caso de error
     
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
         password_confirmar = request.form['password_confirmar']
         nombre = request.form['nombre']
+        
+        print(f"DEBUG SETUP: Creando admin - Email: {email}, Nombre: {nombre}")
         
         # Verificar que las contraseñas coincidan
         if password != password_confirmar:
@@ -467,18 +495,25 @@ def setup_admin():
             flash('Este email ya está registrado')
             return redirect(url_for('setup_admin'))
         
-        # Crear el administrador
-        admin = Usuario(
-            email=email,
-            password_hash=generate_password_hash(password),
-            nombre=nombre,
-            is_admin=True
-        )
-        db.session.add(admin)
-        db.session.commit()
-        
-        flash('Administrador creado exitosamente. Ya puedes iniciar sesión.', 'success')
-        return redirect(url_for('admin_login'))
+        try:
+            # Crear el administrador
+            admin = Usuario(
+                email=email,
+                password_hash=generate_password_hash(password),
+                nombre=nombre,
+                is_admin=True
+            )
+            db.session.add(admin)
+            db.session.commit()
+            
+            print(f"DEBUG SETUP: Admin creado exitosamente - ID: {admin.id}")
+            flash('Administrador creado exitosamente. Ya puedes iniciar sesión.', 'success')
+            return redirect(url_for('admin_login'))
+        except Exception as e:
+            print(f"DEBUG SETUP: Error creando admin: {e}")
+            db.session.rollback()
+            flash('Error al crear el administrador. Intenta nuevamente.')
+            return redirect(url_for('setup_admin'))
     
     return render_template('setup_admin.html')
 
