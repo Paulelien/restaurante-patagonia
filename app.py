@@ -731,7 +731,17 @@ def nuevo_evento():
             bebidas_incluidas = 'bebidas_incluidas' in request.form
             servicio_meseros = 'servicio_meseros' in request.form
             decoracion = 'decoracion' in request.form
+            
+            # Convertir presupuesto_estimado a entero si existe
             presupuesto_estimado = request.form.get('presupuesto_estimado')
+            if presupuesto_estimado and presupuesto_estimado.strip():
+                try:
+                    presupuesto_estimado = int(presupuesto_estimado)
+                except ValueError:
+                    presupuesto_estimado = None
+            else:
+                presupuesto_estimado = None
+                
             observaciones = request.form.get('observaciones', '')
             
             print(f"DEBUG: Datos del formulario procesados correctamente")
@@ -775,6 +785,26 @@ def nuevo_evento():
             
             # Crear el evento
             try:
+                # Verificar que todos los campos requeridos estén presentes
+                print(f"DEBUG: Creando evento con datos:")
+                print(f"  - empresa_id: {empresa_id}")
+                print(f"  - nombre_evento: {nombre_evento}")
+                print(f"  - tipo_evento: {tipo_evento}")
+                print(f"  - fecha_evento: {fecha_evento_dt}")
+                print(f"  - hora_inicio: {hora_inicio}")
+                print(f"  - hora_fin: {hora_fin}")
+                print(f"  - numero_personas: {numero_personas}")
+                print(f"  - lugar_evento: {lugar_evento}")
+                print(f"  - direccion_evento: {direccion_evento}")
+                print(f"  - menu_seleccionado: {menu_seleccionado}")
+                print(f"  - bebidas_incluidas: {bebidas_incluidas}")
+                print(f"  - servicio_meseros: {servicio_meseros}")
+                print(f"  - decoracion: {decoracion}")
+                print(f"  - presupuesto_estimado: {presupuesto_estimado}")
+                print(f"  - descuento_aplicado: {descuento_aplicado}")
+                print(f"  - precio_final: {precio_final}")
+                print(f"  - observaciones: {observaciones}")
+                
                 evento = EventoCorporativo(
                     empresa_id=empresa_id,
                     nombre_evento=nombre_evento,
@@ -796,14 +826,19 @@ def nuevo_evento():
                 )
                 print(f"DEBUG: Objeto evento creado correctamente")
                 
+                # Intentar guardar en la base de datos
+                print(f"DEBUG: Intentando agregar evento a la sesión...")
                 db.session.add(evento)
+                print(f"DEBUG: Evento agregado a la sesión, intentando commit...")
                 db.session.commit()
-                print(f"DEBUG: Evento guardado en base de datos")
+                print(f"DEBUG: Evento guardado en base de datos exitosamente")
                 flash(f'Evento "{nombre_evento}" registrado exitosamente')
                 return redirect(url_for('admin_eventos'))
             except Exception as db_error:
                 print(f"ERROR en base de datos al crear evento: {db_error}")
                 print(f"Tipo de error DB: {type(db_error)}")
+                import traceback
+                print(f"Traceback DB: {traceback.format_exc()}")
                 db.session.rollback()
                 flash('Error al guardar el evento. Intenta nuevamente.')
                 return redirect(url_for('nuevo_evento'))
