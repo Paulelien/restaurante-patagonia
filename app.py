@@ -146,6 +146,7 @@ class Reserva(db.Model):
     fecha = db.Column(db.String(20), nullable=False)
     hora = db.Column(db.String(10), nullable=False)
     personas = db.Column(db.Integer, nullable=False)
+    observaciones = db.Column(db.Text)  # Campo para observaciones del cliente
     estado = db.Column(db.String(20), default='pendiente')  # pendiente, confirmada, cancelada, completada
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     puntos_otorgados = db.Column(db.Boolean, default=False)
@@ -274,6 +275,9 @@ def reservas():
             flash('Lo sentimos, no hay disponibilidad para esa fecha y hora.')
             return redirect(url_for('reservas'))
         
+        # Obtener observaciones (opcional)
+        observaciones = request.form.get('observaciones', '').strip()
+        
         # Crear reserva
         reserva = Reserva(
             usuario_id=current_user.id if current_user.is_authenticated else None,
@@ -282,7 +286,8 @@ def reservas():
             email=email,
             fecha=fecha,
             hora=hora,
-            personas=personas
+            personas=personas,
+            observaciones=observaciones
         )
         db.session.add(reserva)
         db.session.commit()

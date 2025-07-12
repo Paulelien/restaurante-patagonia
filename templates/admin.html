@@ -407,6 +407,7 @@
                                 <th>Fecha</th>
                                 <th>Hora</th>
                                 <th>Personas</th>
+                                <th>Observaciones</th>
                                 <th>Estado</th>
                                 <th>Usuario</th>
                                 <th>Acción</th>
@@ -421,6 +422,16 @@
                                 <td>{{ reserva.fecha }}</td>
                                 <td>{{ reserva.hora }}</td>
                                 <td>{{ reserva.personas }}</td>
+                                <td>
+                                    {% if reserva.observaciones %}
+                                        <span class="text-info" title="{{ reserva.observaciones }}">
+                                            <i class="fas fa-comment"></i>
+                                            {{ reserva.observaciones[:30] }}{% if reserva.observaciones|length > 30 %}...{% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {% if reserva.estado == 'pendiente' %}
                                         <span class="badge bg-warning text-dark">Pendiente</span>
