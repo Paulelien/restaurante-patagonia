@@ -204,17 +204,77 @@
             </div>
             <div class="col-md-6">
                 <div class="card p-3">
+                    <h5 class="fw-bold mb-3">Estado de Eventos</h5>
+                    <div class="chart-container">
+                        <canvas id="eventosEstadoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3">
                     <h5 class="fw-bold mb-3">Eventos por Mes</h5>
                     <div class="chart-container">
                         <canvas id="eventosMesChart"></canvas>
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Segunda fila de eventos -->
+        <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card p-3">
                     <h5 class="fw-bold mb-3">Ingresos por Mes</h5>
                     <div class="chart-container">
                         <canvas id="ingresosMesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5 class="fw-bold mb-3">Resumen de Eventos</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Cantidad</th>
+                                    <th>Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set total_eventos = estados_eventos|sum(attribute=1) %}
+                                {% for estado, cantidad in estados_eventos %}
+                                <tr>
+                                    <td>
+                                        {% if estado == 'pendiente' %}
+                                            <span class="badge bg-warning">Pendiente</span>
+                                        {% elif estado == 'confirmado' %}
+                                            <span class="badge bg-success">Confirmado</span>
+                                        {% elif estado == 'cancelado' %}
+                                            <span class="badge bg-danger">Cancelado</span>
+                                        {% elif estado == 'completado' %}
+                                            <span class="badge bg-info">Completado</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ estado }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ cantidad }}</strong></td>
+                                    <td>
+                                        {% if total_eventos > 0 %}
+                                            {{ "%.1f"|format((cantidad / total_eventos) * 100) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-muted text-center">No hay eventos registrados</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -345,6 +405,24 @@
                 datasets: [{
                     data: transaccionesData,
                     backgroundColor: ['#2ecc71', '#e74c3c'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Estado de eventos
+        const eventosEstadoLabels = {{ estados_eventos|map(attribute=0)|list|tojson }};
+        const eventosEstadoData = {{ estados_eventos|map(attribute=1)|list|tojson }};
+        new Chart(document.getElementById('eventosEstadoChart'), {
+            type: 'pie',
+            data: {
+                labels: eventosEstadoLabels,
+                datasets: [{
+                    data: eventosEstadoData,
+                    backgroundColor: ['#f39c12', '#27ae60', '#e74c3c', '#17a2b8'],
                 }]
             },
             options: {
