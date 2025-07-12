@@ -377,10 +377,24 @@ def admin_login():
 @admin_required
 def admin():
     renovar_sesion_admin()  # Renovar sesión en cada acceso
-    reservas = Reserva.query.order_by(Reserva.fecha, Reserva.hora).all()
-    usuarios = Usuario.query.order_by(Usuario.fecha_registro.desc()).limit(10).all()
-    config = get_configuracion()
-    return render_template('admin.html', reservas=reservas, usuarios=usuarios, config=config)
+    try:
+        reservas = Reserva.query.order_by(Reserva.fecha, Reserva.hora).all()
+        usuarios = Usuario.query.order_by(Usuario.fecha_registro.desc()).limit(10).all()
+        config = get_configuracion()
+        return render_template('admin.html', reservas=reservas, usuarios=usuarios, config=config)
+    except Exception as e:
+        print(f"ERROR en admin: {e}")
+        # Si hay error de base de datos, intentar actualizar automáticamente
+        try:
+            db.create_all()
+            reservas = Reserva.query.order_by(Reserva.fecha, Reserva.hora).all()
+            usuarios = Usuario.query.order_by(Usuario.fecha_registro.desc()).limit(10).all()
+            config = get_configuracion()
+            return render_template('admin.html', reservas=reservas, usuarios=usuarios, config=config)
+        except Exception as e2:
+            print(f"ERROR después de actualizar BD: {e2}")
+            flash('Error al cargar los datos. La base de datos se está actualizando.')
+            return render_template('admin.html', reservas=[], usuarios=[], config=get_configuracion())
 
 @app.route('/admin/confirmar/<int:reserva_id>')
 @admin_required

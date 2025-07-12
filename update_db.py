@@ -1,20 +1,40 @@
+#!/usr/bin/env python3
+"""
+Script para actualizar la base de datos con el campo observaciones
+"""
+
 import os
-from app import db, app
+import sys
+
+# Agregar el directorio actual al path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from app import app, db
 
 def actualizar_base_datos():
+    """Actualiza la base de datos con los nuevos campos"""
+    
     with app.app_context():
-        # Eliminar la base de datos existente para recrearla con el nuevo esquema
-        db_path = os.path.join(os.path.dirname(__file__), 'patagonia.db')
-        if os.path.exists(db_path):
-            os.remove(db_path)
-            print("Base de datos anterior eliminada")
-        
-        # Crear todas las tablas
-        db.create_all()
-        print("Base de datos actualizada exitosamente!")
-        print("Nuevas tablas creadas:")
-        print("- empresa_convenio")
-        print("- evento_corporativo")
+        try:
+            print("🔄 Actualizando base de datos...")
+            
+            # Crear todas las tablas (esto agregará el campo observaciones si no existe)
+            db.create_all()
+            
+            print("✅ Base de datos actualizada exitosamente")
+            print("✅ El campo 'observaciones' está ahora disponible en la tabla reserva")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error actualizando base de datos: {e}")
+            return False
 
 if __name__ == '__main__':
-    actualizar_base_datos() 
+    print("🚀 Iniciando actualización de base de datos...")
+    
+    if actualizar_base_datos():
+        print("🎉 Actualización completada exitosamente")
+    else:
+        print("💥 Error en la actualización")
+        sys.exit(1) 
