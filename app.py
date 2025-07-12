@@ -659,9 +659,17 @@ def editar_empresa(empresa_id):
             flash(f'Empresa {empresa.nombre} actualizada exitosamente')
             return redirect(url_for('admin_empresas'))
         
-        return render_template('editar_empresa.html', empresa=empresa)
+        # Renderizar el template con la empresa
+        try:
+            return render_template('editar_empresa.html', empresa=empresa)
+        except Exception as template_error:
+            print(f"ERROR renderizando template editar_empresa.html: {template_error}")
+            flash('Error al cargar el formulario de edición. Intenta nuevamente.')
+            return redirect(url_for('admin_empresas'))
+            
     except Exception as e:
         print(f"ERROR en editar_empresa: {e}")
+        print(f"Tipo de error: {type(e)}")
         flash('Error al editar la empresa. Intenta nuevamente.')
         return redirect(url_for('admin_empresas'))
 
