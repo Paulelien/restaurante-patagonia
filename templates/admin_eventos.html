@@ -405,8 +405,8 @@
 
         function marcarCompletado(eventoId) {
             if (confirm('¿Marcar este evento como completado?')) {
-                // Aquí se podría agregar la lógica para marcar como completado
-                alert('Funcionalidad en desarrollo');
+                // Redirigir a la ruta para marcar como completado
+                window.location.href = `/admin/eventos/completar/${eventoId}`;
             }
         }
     </script>

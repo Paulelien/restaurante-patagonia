@@ -880,6 +880,26 @@ def cancelar_evento(evento_id):
     flash(f'Evento {evento.nombre_evento} cancelado')
     return redirect(url_for('admin_eventos'))
 
+@app.route('/admin/eventos/completar/<int:evento_id>')
+@admin_required
+def completar_evento(evento_id):
+    try:
+        evento = EventoCorporativo.query.get_or_404(evento_id)
+        
+        # Solo permitir marcar como completado eventos confirmados
+        if evento.estado != 'confirmado':
+            flash('Solo se pueden marcar como completados eventos confirmados')
+            return redirect(url_for('admin_eventos'))
+        
+        evento.estado = 'completado'
+        db.session.commit()
+        flash(f'Evento "{evento.nombre_evento}" marcado como completado')
+        return redirect(url_for('admin_eventos'))
+    except Exception as e:
+        print(f"ERROR al completar evento: {e}")
+        flash('Error al marcar el evento como completado')
+        return redirect(url_for('admin_eventos'))
+
 # Rutas para gestión de promociones especiales
 @app.route('/admin/promociones')
 @admin_required
