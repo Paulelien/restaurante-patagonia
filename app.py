@@ -684,6 +684,8 @@ def admin_eventos():
 def nuevo_evento():
     try:
         if request.method == 'POST':
+            print("DEBUG: Procesando formulario de nuevo evento")
+            
             # Validar campos obligatorios
             if not request.form.get('empresa_id'):
                 flash('Debe seleccionar una empresa')
@@ -700,7 +702,9 @@ def nuevo_evento():
             # Obtener y validar datos del formulario
             try:
                 empresa_id = int(request.form['empresa_id'])
-            except (ValueError, KeyError):
+                print(f"DEBUG: Empresa ID: {empresa_id}")
+            except (ValueError, KeyError) as e:
+                print(f"DEBUG: Error con empresa_id: {e}")
                 flash('Empresa inválida')
                 return redirect(url_for('nuevo_evento'))
             
@@ -715,7 +719,9 @@ def nuevo_evento():
                 if numero_personas <= 0:
                     flash('El número de personas debe ser mayor a 0')
                     return redirect(url_for('nuevo_evento'))
-            except ValueError:
+                print(f"DEBUG: Número de personas: {numero_personas}")
+            except ValueError as e:
+                print(f"DEBUG: Error con numero_personas: {e}")
                 flash('Número de personas inválido')
                 return redirect(url_for('nuevo_evento'))
             
@@ -728,23 +734,29 @@ def nuevo_evento():
             presupuesto_estimado = request.form.get('presupuesto_estimado')
             observaciones = request.form.get('observaciones', '')
             
+            print(f"DEBUG: Datos del formulario procesados correctamente")
+            
             # Convertir fecha del evento
             try:
                 fecha_evento_dt = datetime.strptime(fecha_evento, '%Y-%m-%d')
+                print(f"DEBUG: Fecha convertida: {fecha_evento_dt}")
                 # Verificar que la fecha no sea en el pasado
                 if fecha_evento_dt.date() < datetime.now().date():
                     flash('La fecha del evento no puede ser en el pasado')
                     return redirect(url_for('nuevo_evento'))
-            except ValueError:
+            except ValueError as e:
+                print(f"DEBUG: Error con fecha: {e}")
                 flash('Formato de fecha inválido')
                 return redirect(url_for('nuevo_evento'))
             
             # Obtener empresa y verificar que existe
             empresa = EmpresaConvenio.query.get(empresa_id)
             if not empresa:
+                print(f"DEBUG: Empresa no encontrada con ID: {empresa_id}")
                 flash('Empresa no encontrada')
                 return redirect(url_for('nuevo_evento'))
             
+            print(f"DEBUG: Empresa encontrada: {empresa.nombre}")
             descuento_aplicado = empresa.descuento_porcentaje
             
             # Calcular precio final (lógica simplificada)
@@ -759,40 +771,47 @@ def nuevo_evento():
             descuento_monto = int(precio_base * (descuento_aplicado / 100))
             precio_final = precio_base - descuento_monto
             
-            # Crear el evento
-            evento = EventoCorporativo(
-                empresa_id=empresa_id,
-                nombre_evento=nombre_evento,
-                tipo_evento=tipo_evento,
-                fecha_evento=fecha_evento_dt,
-                hora_inicio=hora_inicio,
-                hora_fin=hora_fin,
-                numero_personas=numero_personas,
-                lugar_evento=lugar_evento,
-                direccion_evento=direccion_evento,
-                menu_seleccionado=menu_seleccionado,
-                bebidas_incluidas=bebidas_incluidas,
-                servicio_meseros=servicio_meseros,
-                decoracion=decoracion,
-                presupuesto_estimado=presupuesto_estimado,
-                descuento_aplicado=descuento_aplicado,
-                precio_final=precio_final,
-                observaciones=observaciones
-            )
+            print(f"DEBUG: Precio calculado - Base: {precio_base}, Final: {precio_final}")
             
+            # Crear el evento
             try:
+                evento = EventoCorporativo(
+                    empresa_id=empresa_id,
+                    nombre_evento=nombre_evento,
+                    tipo_evento=tipo_evento,
+                    fecha_evento=fecha_evento_dt,
+                    hora_inicio=hora_inicio,
+                    hora_fin=hora_fin,
+                    numero_personas=numero_personas,
+                    lugar_evento=lugar_evento,
+                    direccion_evento=direccion_evento,
+                    menu_seleccionado=menu_seleccionado,
+                    bebidas_incluidas=bebidas_incluidas,
+                    servicio_meseros=servicio_meseros,
+                    decoracion=decoracion,
+                    presupuesto_estimado=presupuesto_estimado,
+                    descuento_aplicado=descuento_aplicado,
+                    precio_final=precio_final,
+                    observaciones=observaciones
+                )
+                print(f"DEBUG: Objeto evento creado correctamente")
+                
                 db.session.add(evento)
                 db.session.commit()
+                print(f"DEBUG: Evento guardado en base de datos")
                 flash(f'Evento "{nombre_evento}" registrado exitosamente')
                 return redirect(url_for('admin_eventos'))
             except Exception as db_error:
                 print(f"ERROR en base de datos al crear evento: {db_error}")
+                print(f"Tipo de error DB: {type(db_error)}")
                 db.session.rollback()
                 flash('Error al guardar el evento. Intenta nuevamente.')
                 return redirect(url_for('nuevo_evento'))
         
         # GET request - mostrar formulario
+        print("DEBUG: Mostrando formulario de nuevo evento")
         empresas = EmpresaConvenio.query.filter_by(estado='activo').all()
+        print(f"DEBUG: Empresas encontradas: {len(empresas)}")
         if not empresas:
             flash('No hay empresas activas disponibles. Crea una empresa primero.')
             return redirect(url_for('admin_empresas'))
@@ -802,6 +821,8 @@ def nuevo_evento():
     except Exception as e:
         print(f"ERROR en nuevo_evento: {e}")
         print(f"Tipo de error: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         flash('Error inesperado al procesar el evento. Intenta nuevamente.')
         return redirect(url_for('admin_eventos'))
 
