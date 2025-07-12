@@ -682,74 +682,128 @@ def admin_eventos():
 @app.route('/admin/eventos/nuevo', methods=['GET', 'POST'])
 @admin_required
 def nuevo_evento():
-    if request.method == 'POST':
-        empresa_id = int(request.form['empresa_id'])
-        nombre_evento = request.form['nombre_evento']
-        tipo_evento = request.form['tipo_evento']
-        fecha_evento = request.form['fecha_evento']
-        hora_inicio = request.form['hora_inicio']
-        hora_fin = request.form['hora_fin']
-        numero_personas = int(request.form['numero_personas'])
-        lugar_evento = request.form.get('lugar_evento', 'Restaurante')
-        direccion_evento = request.form.get('direccion_evento', '')
-        menu_seleccionado = request.form.get('menu_seleccionado', '')
-        bebidas_incluidas = 'bebidas_incluidas' in request.form
-        servicio_meseros = 'servicio_meseros' in request.form
-        decoracion = 'decoracion' in request.form
-        presupuesto_estimado = request.form.get('presupuesto_estimado')
-        observaciones = request.form.get('observaciones', '')
+    try:
+        if request.method == 'POST':
+            # Validar campos obligatorios
+            if not request.form.get('empresa_id'):
+                flash('Debe seleccionar una empresa')
+                return redirect(url_for('nuevo_evento'))
+            
+            if not request.form.get('nombre_evento'):
+                flash('El nombre del evento es obligatorio')
+                return redirect(url_for('nuevo_evento'))
+            
+            if not request.form.get('fecha_evento'):
+                flash('La fecha del evento es obligatoria')
+                return redirect(url_for('nuevo_evento'))
+            
+            # Obtener y validar datos del formulario
+            try:
+                empresa_id = int(request.form['empresa_id'])
+            except (ValueError, KeyError):
+                flash('Empresa inválida')
+                return redirect(url_for('nuevo_evento'))
+            
+            nombre_evento = request.form['nombre_evento'].strip()
+            tipo_evento = request.form.get('tipo_evento', 'almuerzo')
+            fecha_evento = request.form['fecha_evento']
+            hora_inicio = request.form.get('hora_inicio', '12:00')
+            hora_fin = request.form.get('hora_fin', '14:00')
+            
+            try:
+                numero_personas = int(request.form.get('numero_personas', 1))
+                if numero_personas <= 0:
+                    flash('El número de personas debe ser mayor a 0')
+                    return redirect(url_for('nuevo_evento'))
+            except ValueError:
+                flash('Número de personas inválido')
+                return redirect(url_for('nuevo_evento'))
+            
+            lugar_evento = request.form.get('lugar_evento', 'Restaurante')
+            direccion_evento = request.form.get('direccion_evento', '')
+            menu_seleccionado = request.form.get('menu_seleccionado', '')
+            bebidas_incluidas = 'bebidas_incluidas' in request.form
+            servicio_meseros = 'servicio_meseros' in request.form
+            decoracion = 'decoracion' in request.form
+            presupuesto_estimado = request.form.get('presupuesto_estimado')
+            observaciones = request.form.get('observaciones', '')
+            
+            # Convertir fecha del evento
+            try:
+                fecha_evento_dt = datetime.strptime(fecha_evento, '%Y-%m-%d')
+                # Verificar que la fecha no sea en el pasado
+                if fecha_evento_dt.date() < datetime.now().date():
+                    flash('La fecha del evento no puede ser en el pasado')
+                    return redirect(url_for('nuevo_evento'))
+            except ValueError:
+                flash('Formato de fecha inválido')
+                return redirect(url_for('nuevo_evento'))
+            
+            # Obtener empresa y verificar que existe
+            empresa = EmpresaConvenio.query.get(empresa_id)
+            if not empresa:
+                flash('Empresa no encontrada')
+                return redirect(url_for('nuevo_evento'))
+            
+            descuento_aplicado = empresa.descuento_porcentaje
+            
+            # Calcular precio final (lógica simplificada)
+            precio_base = numero_personas * 15000  # $15,000 por persona como base
+            if bebidas_incluidas:
+                precio_base += numero_personas * 3000
+            if servicio_meseros:
+                precio_base += 50000
+            if decoracion:
+                precio_base += 30000
+            
+            descuento_monto = int(precio_base * (descuento_aplicado / 100))
+            precio_final = precio_base - descuento_monto
+            
+            # Crear el evento
+            evento = EventoCorporativo(
+                empresa_id=empresa_id,
+                nombre_evento=nombre_evento,
+                tipo_evento=tipo_evento,
+                fecha_evento=fecha_evento_dt,
+                hora_inicio=hora_inicio,
+                hora_fin=hora_fin,
+                numero_personas=numero_personas,
+                lugar_evento=lugar_evento,
+                direccion_evento=direccion_evento,
+                menu_seleccionado=menu_seleccionado,
+                bebidas_incluidas=bebidas_incluidas,
+                servicio_meseros=servicio_meseros,
+                decoracion=decoracion,
+                presupuesto_estimado=presupuesto_estimado,
+                descuento_aplicado=descuento_aplicado,
+                precio_final=precio_final,
+                observaciones=observaciones
+            )
+            
+            try:
+                db.session.add(evento)
+                db.session.commit()
+                flash(f'Evento "{nombre_evento}" registrado exitosamente')
+                return redirect(url_for('admin_eventos'))
+            except Exception as db_error:
+                print(f"ERROR en base de datos al crear evento: {db_error}")
+                db.session.rollback()
+                flash('Error al guardar el evento. Intenta nuevamente.')
+                return redirect(url_for('nuevo_evento'))
         
-        # Convertir fecha del evento
-        try:
-            fecha_evento_dt = datetime.strptime(fecha_evento, '%Y-%m-%d')
-        except ValueError:
-            flash('Formato de fecha inválido')
-            return redirect(url_for('nuevo_evento'))
+        # GET request - mostrar formulario
+        empresas = EmpresaConvenio.query.filter_by(estado='activo').all()
+        if not empresas:
+            flash('No hay empresas activas disponibles. Crea una empresa primero.')
+            return redirect(url_for('admin_empresas'))
         
-        # Obtener empresa y calcular descuento
-        empresa = EmpresaConvenio.query.get_or_404(empresa_id)
-        descuento_aplicado = empresa.descuento_porcentaje
+        return render_template('nuevo_evento.html', empresas=empresas)
         
-        # Calcular precio final (lógica simplificada)
-        precio_base = numero_personas * 15000  # $15,000 por persona como base
-        if bebidas_incluidas:
-            precio_base += numero_personas * 3000
-        if servicio_meseros:
-            precio_base += 50000
-        if decoracion:
-            precio_base += 30000
-        
-        descuento_monto = int(precio_base * (descuento_aplicado / 100))
-        precio_final = precio_base - descuento_monto
-        
-        evento = EventoCorporativo(
-            empresa_id=empresa_id,
-            nombre_evento=nombre_evento,
-            tipo_evento=tipo_evento,
-            fecha_evento=fecha_evento_dt,
-            hora_inicio=hora_inicio,
-            hora_fin=hora_fin,
-            numero_personas=numero_personas,
-            lugar_evento=lugar_evento,
-            direccion_evento=direccion_evento,
-            menu_seleccionado=menu_seleccionado,
-            bebidas_incluidas=bebidas_incluidas,
-            servicio_meseros=servicio_meseros,
-            decoracion=decoracion,
-            presupuesto_estimado=presupuesto_estimado,
-            descuento_aplicado=descuento_aplicado,
-            precio_final=precio_final,
-            observaciones=observaciones
-        )
-        
-        db.session.add(evento)
-        db.session.commit()
-        
-        flash(f'Evento {nombre_evento} registrado exitosamente')
+    except Exception as e:
+        print(f"ERROR en nuevo_evento: {e}")
+        print(f"Tipo de error: {type(e)}")
+        flash('Error inesperado al procesar el evento. Intenta nuevamente.')
         return redirect(url_for('admin_eventos'))
-    
-    empresas = EmpresaConvenio.query.filter_by(estado='activo').all()
-    return render_template('nuevo_evento.html', empresas=empresas)
 
 @app.route('/admin/eventos/confirmar/<int:evento_id>')
 @admin_required
