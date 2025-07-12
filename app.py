@@ -27,9 +27,9 @@ if database_url and database_url.startswith('postgres'):
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     print(f"DEBUG: Usando PostgreSQL en producción: {database_url[:50]}...")
 else:
-    # Para desarrollo y producción sin PostgreSQL (SQLite)
+    # Para desarrollo (SQLite)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'patagonia.db')
-    print(f"DEBUG: Usando SQLite: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    print(f"DEBUG: Usando SQLite local: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 print(f"DEBUG: SQLALCHEMY_DATABASE_URI final: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
