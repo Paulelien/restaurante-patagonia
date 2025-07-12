@@ -28,8 +28,11 @@ if database_url and database_url.startswith('postgres'):
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
         print("DEBUG: Convertida postgres:// a postgresql://")
+    
+    # Configurar para usar psycopg3
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-    print(f"DEBUG: Usando PostgreSQL en producción: {database_url[:50]}...")
+    print(f"DEBUG: Usando PostgreSQL con psycopg3: {database_url[:50]}...")
 else:
     # Para desarrollo (SQLite)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'patagonia.db')
