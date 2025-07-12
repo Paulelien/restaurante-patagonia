@@ -16,15 +16,22 @@ app = Flask(__name__)
 
 # Configuración de base de datos para producción
 database_url = os.environ.get('DATABASE_URL')
-if database_url:
+print(f"DEBUG: DATABASE_URL encontrada: {'SÍ' if database_url else 'NO'}")
+if database_url and database_url.startswith('postgres'):
+    print(f"DEBUG: DATABASE_URL completa: {database_url}")
     # Para producción (PostgreSQL)
     # Render usa postgres:// pero SQLAlchemy necesita postgresql://
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        print("DEBUG: Convertida postgres:// a postgresql://")
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    print(f"DEBUG: Usando PostgreSQL en producción: {database_url[:50]}...")
 else:
-    # Para desarrollo (SQLite)
+    # Para desarrollo y producción sin PostgreSQL (SQLite)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'patagonia.db')
+    print(f"DEBUG: Usando SQLite: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
+print(f"DEBUG: SQLALCHEMY_DATABASE_URI final: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.environ.get('SECRET_KEY', 'patagonia_arica_super_secret_2024')
@@ -1222,21 +1229,43 @@ def admin_estadisticas():
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        try:
+            print("DEBUG: Intentando crear tablas de la base de datos...")
+            db.create_all()
+            print("DEBUG: Tablas creadas exitosamente")
+            
+            # Verificar conexión consultando una tabla
+            try:
+                usuarios_count = Usuario.query.count()
+                print(f"DEBUG: Conexión exitosa. Usuarios en BD: {usuarios_count}")
+            except Exception as e:
+                print(f"DEBUG: Error consultando usuarios: {e}")
+                
+        except Exception as e:
+            print(f"DEBUG: Error creando tablas: {e}")
+            print(f"DEBUG: Tipo de error: {type(e)}")
+        
         # Crear configuración inicial
-        if not Configuracion.query.first():
-            configs_iniciales = [
-                ('titulo_sitio', 'Restaurante Patagonia - Arica'),
-                ('descripcion_hero', 'Ubicado en Arica, ofrecemos lo mejor de la gastronomía patagónica en el norte de Chile.'),
-                ('facebook_url', 'https://facebook.com/patagoniaarica'),
-                ('instagram_url', 'https://instagram.com/patagoniaarica'),
-                ('telefono', '+56 58 123 4567'),
-                ('direccion', 'Av. Principal 123, Arica, Chile'),
-                ('horario', 'Lunes a Domingo: 12:00 - 23:00')
-            ]
-            for clave, valor in configs_iniciales:
-                config = Configuracion(clave=clave, valor=valor)
-                db.session.add(config)
-            db.session.commit()
+        try:
+            if not Configuracion.query.first():
+                print("DEBUG: Creando configuración inicial...")
+                configs_iniciales = [
+                    ('titulo_sitio', 'Restaurante Patagonia - Arica'),
+                    ('descripcion_hero', 'Ubicado en Arica, ofrecemos lo mejor de la gastronomía patagónica en el norte de Chile.'),
+                    ('facebook_url', 'https://facebook.com/patagoniaarica'),
+                    ('instagram_url', 'https://instagram.com/patagoniaarica'),
+                    ('telefono', '+56 58 123 4567'),
+                    ('direccion', 'Av. Principal 123, Arica, Chile'),
+                    ('horario', 'Lunes a Domingo: 12:00 - 23:00')
+                ]
+                for clave, valor in configs_iniciales:
+                    config = Configuracion(clave=clave, valor=valor)
+                    db.session.add(config)
+                db.session.commit()
+                print("DEBUG: Configuración inicial creada exitosamente")
+            else:
+                print("DEBUG: Configuración ya existe")
+        except Exception as e:
+            print(f"DEBUG: Error creando configuración: {e}")
     
     app.run(debug=True)
