@@ -307,10 +307,17 @@ def reservas():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     # Verificar si existe algún administrador
-    admin_existente = Usuario.query.filter_by(is_admin=True).first()
-    if not admin_existente:
-        # Si no hay administradores, redirigir a la configuración inicial
-        return redirect(url_for('setup_admin'))
+    try:
+        admin_existente = Usuario.query.filter_by(is_admin=True).first()
+        print(f"DEBUG: Admin encontrado: {admin_existente}")
+        if not admin_existente:
+            print("DEBUG: No se encontró admin, redirigiendo a setup")
+            # Si no hay administradores, redirigir a la configuración inicial
+            return redirect(url_for('setup_admin'))
+    except Exception as e:
+        print(f"DEBUG: Error verificando admin: {e}")
+        # En caso de error, permitir acceso al login
+        pass
     
     if request.method == 'POST':
         email = request.form['email']
