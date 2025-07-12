@@ -11,6 +11,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+# Configurar para usar psycopg3 con SQLAlchemy
+import psycopg
+from psycopg.adapt import Loader
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 
